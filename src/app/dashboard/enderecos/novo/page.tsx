@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { db } from '@/lib/firebase/config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function NovoEnderecoPage() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function NovoEnderecoPage() {
   const [cep, setCep] = useState('');
   const [complemento, setComplemento] = useState('');
   const [referencia, setReferencia] = useState('');
+  const [clienteNome, setClienteNome] = useState(''); // Campo para nome do cliente, caso não venha de um pedido
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -35,29 +38,28 @@ export default function NovoEnderecoPage() {
         return;
     }
 
-    // Simulação de salvamento
-    console.log("Salvando novo endereço:", { rua, numero, bairro, cidade, cep, complemento, referencia });
-    
-    // TODO: Integrar com Firestore para salvar o endereço
-    // try {
-    //   // Lógica para salvar no Firestore
-    //   toast({ title: "Endereço salvo!", description: "O novo endereço foi salvo com sucesso." });
-    //   router.push('/dashboard/enderecos');
-    // } catch (error) {
-    //   toast({ title: "Erro ao salvar", description: "Não foi possível salvar o endereço.", variant: "destructive" });
-    // } finally {
-    //   setIsLoading(false);
-    // }
-
-    // Simulação de sucesso e redirecionamento
-    setTimeout(() => {
-      toast({
-        title: "Endereço 'salvo' (simulado)!",
-        description: "Os dados do endereço foram registrados no console.",
+    try {
+      const enderecosCollectionRef = collection(db, 'enderecos');
+      await addDoc(enderecosCollectionRef, {
+        rua: rua.trim(),
+        numero: numero.trim(),
+        bairro: bairro.trim(),
+        cidade: cidade.trim(),
+        cep: cep.trim(),
+        complemento: complemento.trim(),
+        referencia: referencia.trim(),
+        clienteNome: clienteNome.trim() || null, // Salva como null se não preenchido
+        dataCriacao: serverTimestamp(),
       });
+
+      toast({ title: "Endereço salvo!", description: "O novo endereço foi salvo com sucesso no Firestore." });
       router.push('/dashboard/enderecos');
+    } catch (error) {
+      console.error("Erro ao salvar endereço: ", error);
+      toast({ title: "Erro ao salvar", description: "Não foi possível salvar o endereço.", variant: "destructive" });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -86,6 +88,10 @@ export default function NovoEnderecoPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="clienteNome">Nome do Cliente (Opcional)</Label>
+              <Input id="clienteNome" value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} placeholder="Nome do cliente para este endereço" />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="rua">Rua / Avenida <span className="text-destructive">*</span></Label>
@@ -141,3 +147,5 @@ export default function NovoEnderecoPage() {
     </div>
   );
 }
+
+    

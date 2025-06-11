@@ -102,6 +102,7 @@ export default function EditarEnderecoPage() {
       const enderecoDocRef = doc(db, 'enderecos', enderecoId);
       await updateDoc(enderecoDocRef, {
         ...formData, // Salva todos os campos do estado formData
+        clienteNome: formData.clienteNome?.trim() || null, // Garante que o nome do cliente seja salvo como null se vazio
         dataModificacao: serverTimestamp(), // Opcional: adicionar data de modificação
       });
       toast({ title: "Endereço atualizado!", description: "As alterações foram salvas com sucesso no Firestore." });
@@ -179,13 +180,10 @@ export default function EditarEnderecoPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             {/* Campo Nome do Cliente (opcional, apenas visualização se preenchido) */}
-            {formData.clienteNome && (
-              <div className="space-y-1">
-                <Label htmlFor="clienteNome">Nome do Cliente (Associado)</Label>
-                <Input id="clienteNome" name="clienteNome" value={formData.clienteNome} disabled className="bg-muted/50"/>
-              </div>
-            )}
+            <div className="space-y-1">
+                <Label htmlFor="clienteNome">Nome do Cliente (Opcional)</Label>
+                <Input id="clienteNome" name="clienteNome" value={formData.clienteNome || ''} onChange={handleChange} placeholder="Nome do cliente para este endereço" />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="rua">Rua / Avenida <span className="text-destructive">*</span></Label>
@@ -241,3 +239,5 @@ export default function EditarEnderecoPage() {
     </div>
   );
 }
+
+    
