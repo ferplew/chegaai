@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, DollarSign, Clock, Loader, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"; // Removed ResponsiveContainer
 import Link from "next/link";
 
 const dailyOrdersData = [
@@ -29,20 +30,20 @@ const recentOrders = [
 
 function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
   switch (status.toLowerCase()) {
-    case "novo": return "default"; // Primary color (neon green)
-    case "em preparo": return "secondary"; // A yellow/orange in dark mode, or distinct secondary
-    case "pronto": return "outline"; // This will use border color, maybe change to a success-like
-    case "finalizado": return "destructive"; // Using destructive for now, can be a grey
+    case "novo": return "default"; 
+    case "em preparo": return "secondary"; 
+    case "pronto": return "outline"; 
+    case "finalizado": return "destructive"; 
     default: return "default";
   }
 }
-// Customizing badge colors via explicit classes for demo
+
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
-    case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30"; // Cinza claro (prompt) - using blueish gray
-    case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"; // Amarelo neon suave (prompt)
-    case "pronto": return "bg-primary/20 text-primary border-primary/30"; // Verde neon (prompt)
-    case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"; // Cinza escuro (prompt)
+    case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30"; 
+    case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"; 
+    case "pronto": return "bg-primary/20 text-primary border-primary/30"; 
+    case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"; 
     default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
   }
 }
@@ -113,7 +114,7 @@ export default function DashboardPage() {
             <CardDescription>Volume de pedidos ao longo do dia de hoje.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] w-full p-2">
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer config={chartConfig}>
               <BarChart data={dailyOrdersData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
                 <XAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -121,7 +122,7 @@ export default function DashboardPage() {
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
                 <Bar dataKey="pedidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
         
