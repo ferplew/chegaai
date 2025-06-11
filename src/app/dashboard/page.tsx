@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, DollarSign, Clock, Loader, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react";
+import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react"; // Alterado Loader para Loader2
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, QuerySnapshot, DocumentData } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData } from 'firebase/firestore';
 
 const dailyOrdersData = [
   { hour: "08:00", pedidos: 5 }, { hour: "09:00", pedidos: 8 }, { hour: "10:00", pedidos: 12 },
@@ -31,16 +31,6 @@ const recentOrders = [
   { id: "PED005", product: "Suco de Laranja", status: "Novo", time: "10:08", total: "R$ 8,00" },
 ];
 
-// function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
-//   switch (status.toLowerCase()) {
-//     case "novo": return "default";
-//     case "em preparo": return "secondary";
-//     case "pronto": return "outline";
-//     case "finalizado": return "destructive";
-//     default: return "default";
-//   }
-// }
-
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
     case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
@@ -58,6 +48,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const pedidosCollectionRef = collection(db, 'pedidos');
+    // Query for orders with status "Novo" OR "Em preparo"
     const q = query(pedidosCollectionRef, where('status', 'in', ['Novo', 'Em preparo']));
 
     const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
@@ -65,11 +56,11 @@ export default function DashboardPage() {
       setIsLoadingPedidosEmAndamento(false);
     }, (error) => {
       console.error("Erro ao buscar pedidos em andamento:", error);
-      setPedidosEmAndamentoCount(0); // Ou algum valor de erro, ou manter null
+      setPedidosEmAndamentoCount(0); 
       setIsLoadingPedidosEmAndamento(false);
     });
 
-    return () => unsubscribe(); // Cleanup listener on component unmount
+    return () => unsubscribe(); 
   }, []);
 
 
@@ -121,17 +112,17 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pedidos em Andamento</CardTitle>
-            {isLoadingPedidosEmAndamento || pedidosEmAndamentoCount === null ? (
-                <Loader className="h-5 w-5 text-primary animate-spin" />
+            {isLoadingPedidosEmAndamento ? (
+                <Loader2 className="h-5 w-5 text-primary animate-spin" />
             ) : (
-                <ShoppingCart className="h-5 w-5 text-primary" /> // Using ShoppingCart as a generic icon here
+                <ShoppingCart className="h-5 w-5 text-primary" /> 
             )}
           </CardHeader>
           <CardContent>
-            {isLoadingPedidosEmAndamento || pedidosEmAndamentoCount === null ? (
-              <div className="text-2xl font-bold">-</div>
+            {isLoadingPedidosEmAndamento ? (
+              <div className="text-2xl font-bold animate-pulse">-</div>
             ) : (
-              <div className="text-2xl font-bold">{pedidosEmAndamentoCount}</div>
+              <div className="text-2xl font-bold">{pedidosEmAndamentoCount ?? 0}</div>
             )}
             <p className="text-xs text-muted-foreground">Atualizado em tempo real</p>
           </CardContent>
@@ -214,5 +205,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+    
 
     

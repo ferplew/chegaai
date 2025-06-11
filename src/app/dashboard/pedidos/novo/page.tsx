@@ -2,14 +2,14 @@
 "use client";
 
 import { useState, type FormEvent } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, DollarSign } from "lucide-react";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ export default function NovoPedidoPage() {
   const [nomeCliente, setNomeCliente] = useState('');
   const [telefoneCliente, setTelefoneCliente] = useState('');
   const [itensPedido, setItensPedido] = useState('');
+  const [valorTotal, setValorTotal] = useState<number | ''>('');
   const [formaPagamento, setFormaPagamento] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +41,11 @@ export default function NovoPedidoPage() {
       setIsLoading(false);
       return;
     }
+    if (valorTotal === '' || valorTotal <= 0) {
+      toast({ title: "Campo obrigatório", description: "Por favor, informe um valor total válido.", variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
     if (!formaPagamento) {
       toast({ title: "Campo obrigatório", description: "Por favor, selecione a forma de pagamento.", variant: "destructive" });
       setIsLoading(false);
@@ -49,33 +55,37 @@ export default function NovoPedidoPage() {
     try {
       const pedidosCollectionRef = collection(db, 'pedidos');
       await addDoc(pedidosCollectionRef, {
-        nomeCliente,
-        telefoneCliente,
-        itensPedido,
+        nomeCliente: nomeCliente.trim(),
+        telefoneCliente: telefoneCliente.trim(),
+        itensPedido: itensPedido.trim(),
+        valorTotal: Number(valorTotal),
         formaPagamento,
-        observacoes,
-        status: "Novo", // Status inicial do pedido
-        dataCriacao: serverTimestamp(), // Data e hora do servidor
-        // TODO: Adicionar campos como valorTotal, enderecoId, userId, etc.
+        observacoes: observacoes.trim(),
+        status: "Novo", 
+        dataCriacao: serverTimestamp(),
+        // TODO: Adicionar campos como enderecoId, userId, etc. futuramente
       });
 
       toast({
         title: "Pedido criado!",
-        description: "O novo pedido foi salvo com sucesso.",
+        description: "O novo pedido foi salvo com sucesso no Firestore.",
       });
-      // Limpar formulário ou redirecionar
+      
+      // Limpar formulário
       setNomeCliente('');
       setTelefoneCliente('');
       setItensPedido('');
+      setValorTotal('');
       setFormaPagamento('');
       setObservacoes('');
-      router.push('/dashboard/pedidos'); // Redireciona para a lista de pedidos
+      
+      router.push('/dashboard/pedidos'); 
 
     } catch (error) {
       console.error("Erro ao salvar pedido: ", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível criar o pedido. Tente novamente.",
+        description: "Não foi possível criar o pedido. Verifique o console para mais detalhes.",
         variant: "destructive",
       });
     } finally {
@@ -105,11 +115,11 @@ export default function NovoPedidoPage() {
           <CardHeader>
             <CardTitle>Detalhes do Pedido</CardTitle>
             <CardDescription>
-              Informações do cliente, itens e forma de pagamento.
+              Informações do cliente, itens, valor e forma de pagamento.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="nomeCliente">Nome do Cliente <span className="text-destructive">*</span></Label>
                 <Input
@@ -136,18 +146,35 @@ export default function NovoPedidoPage() {
               <Label htmlFor="itensPedido">Itens do Pedido <span className="text-destructive">*</span></Label>
               <Textarea
                 id="itensPedido"
-                placeholder="Ex: 1x Pizza Margherita Grande, 2x Coca-Cola Lata"
+                placeholder="Ex: 1x Pizza Margherita Grande (R$ 45,00), 2x Coca-Cola Lata (R$ 10,00)"
                 value={itensPedido}
                 onChange={(e) => setItensPedido(e.target.value)}
                 required
-                rows={3}
+                rows={4}
               />
               <p className="text-xs text-muted-foreground">
-                Descreva os produtos e quantidades. Em breve, seleção de itens do cardápio.
+                Descreva os produtos, quantidades e valores. Em breve, seleção de itens do cardápio.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="valorTotal">Valor Total (R$) <span className="text-destructive">*</span></Label>
+                    <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="valorTotal"
+                            type="number"
+                            placeholder="Ex: 55.00"
+                            value={valorTotal}
+                            onChange={(e) => setValorTotal(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                            min="0.01"
+                            step="0.01"
+                            required
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
                 <div className="space-y-2">
                 <Label htmlFor="formaPagamento">Forma de Pagamento <span className="text-destructive">*</span></Label>
                 <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
@@ -169,14 +196,15 @@ export default function NovoPedidoPage() {
               <Label htmlFor="observacoes">Observações</Label>
               <Textarea
                 id="observacoes"
-                placeholder="Ex: Sem cebola, troco para R$50, etc."
+                placeholder="Ex: Sem cebola, troco para R$100,00, etc."
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
-                rows={2}
+                rows={3}
               />
             </div>
-
-            <div className="flex justify-end gap-2 pt-4">
+          </CardContent>
+          <CardFooter className="border-t px-6 py-4">
+            <div className="flex justify-end gap-2 w-full">
               <Button variant="outline" asChild type="button" disabled={isLoading}>
                 <Link href="/dashboard/pedidos">Cancelar</Link>
               </Button>
@@ -191,9 +219,11 @@ export default function NovoPedidoPage() {
                 )}
               </Button>
             </div>
-          </CardContent>
+          </CardFooter>
         </form>
       </Card>
     </div>
   );
 }
+
+    
