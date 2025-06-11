@@ -7,29 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react"; // Alterado Loader para Loader2
+import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle, Info } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData } from 'firebase/firestore';
 
-const dailyOrdersData = [
-  { hour: "08:00", pedidos: 5 }, { hour: "09:00", pedidos: 8 }, { hour: "10:00", pedidos: 12 },
-  { hour: "11:00", pedidos: 20 }, { hour: "12:00", pedidos: 35 }, { hour: "13:00", pedidos: 28 },
-  { hour: "14:00", pedidos: 18 }, { hour: "15:00", pedidos: 10 }, { hour: "16:00", pedidos: 7 },
+// Example data for the chart structure, actual data should be dynamic
+const dailyOrdersDataExample = [
+  { hour: "08:00", pedidos: 0 }, { hour: "09:00", pedidos: 0 }, { hour: "10:00", pedidos: 0 },
+  { hour: "11:00", pedidos: 0 }, { hour: "12:00", pedidos: 0 }, { hour: "13:00", pedidos: 0 },
+  { hour: "14:00", pedidos: 0 }, { hour: "15:00", pedidos: 0 }, { hour: "16:00", pedidos: 0 },
 ];
 
 const chartConfig = {
   pedidos: { label: "Pedidos", color: "hsl(var(--primary))" },
 };
 
-const recentOrders = [
-  { id: "PED001", product: "Pizza Margherita", status: "Novo", time: "10:05", total: "R$ 45,00" },
-  { id: "PED002", product: "Hambúrguer Duplo", status: "Em preparo", time: "10:02", total: "R$ 32,50" },
-  { id: "PED003", product: "Sushi Combo", status: "Pronto", time: "09:55", total: "R$ 78,00" },
-  { id: "PED004", product: "Salada Caesar", status: "Finalizado", time: "09:40", total: "R$ 25,00" },
-  { id: "PED005", product: "Suco de Laranja", status: "Novo", time: "10:08", total: "R$ 8,00" },
-];
+// No more mock recent orders
+// const recentOrders = []; 
 
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
@@ -45,10 +41,13 @@ function getStatusBadgeClass(status: string): string {
 export default function DashboardPage() {
   const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
   const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
+  // Placeholder for actual recent orders data - should be fetched
+  const [recentOrders, setRecentOrders] = useState<any[]>([]); 
+  const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(true);
+
 
   useEffect(() => {
     const pedidosCollectionRef = collection(db, 'pedidos');
-    // Query for orders with status "Novo" OR "Em preparo"
     const q = query(pedidosCollectionRef, where('status', 'in', ['Novo', 'Em preparo']));
 
     const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
@@ -59,6 +58,14 @@ export default function DashboardPage() {
       setPedidosEmAndamentoCount(0); 
       setIsLoadingPedidosEmAndamento(false);
     });
+    
+    // TODO: Implement fetching of recent orders (e.g., last 5 orders from Firestore)
+    // For now, setting it to empty and loaded after a small delay
+    setTimeout(() => {
+        setRecentOrders([]); // Simulating no recent orders found
+        setIsLoadingRecentOrders(false);
+    }, 1000);
+
 
     return () => unsubscribe(); 
   }, []);
@@ -68,8 +75,8 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">Bem-vindo, Restaurante Exemplo!</h1>
-          <p className="text-muted-foreground">Aqui está um resumo da sua operação hoje. <span className="text-xs block">(Valores de faturamento, total de pedidos e tempo de preparo são exemplos)</span></p>
+          <h1 className="text-3xl font-bold font-headline">Bem-vindo!</h1>
+          <p className="text-muted-foreground">Aqui está um resumo da sua operação.</p>
         </div>
         <Button asChild>
           <Link href="/dashboard/pedidos/novo">
@@ -85,8 +92,8 @@ export default function DashboardPage() {
             <ShoppingCart className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">125</div>
-            <p className="text-xs text-muted-foreground">+10.2% desde ontem</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">Nenhum pedido ainda</p>
           </CardContent>
         </Card>
         <Card>
@@ -95,8 +102,8 @@ export default function DashboardPage() {
             <DollarSign className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 3.450,75</div>
-            <p className="text-xs text-muted-foreground">+5.8% desde ontem</p>
+            <div className="text-2xl font-bold">R$ 0,00</div>
+            <p className="text-xs text-muted-foreground">Nenhum faturamento ainda</p>
           </CardContent>
         </Card>
         <Card>
@@ -105,8 +112,8 @@ export default function DashboardPage() {
             <Clock className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">22 min</div>
-            <p className="text-xs text-muted-foreground">-2 min desde ontem</p>
+            <div className="text-2xl font-bold">- min</div>
+            <p className="text-xs text-muted-foreground">Aguardando pedidos</p>
           </CardContent>
         </Card>
         <Card>
@@ -133,11 +140,11 @@ export default function DashboardPage() {
         <Card className="col-span-1 md:col-span-2 lg:col-span-1">
           <CardHeader>
             <CardTitle>Pedidos por Hora (Exemplo)</CardTitle>
-            <CardDescription>Volume de pedidos ao longo do dia de hoje.</CardDescription>
+            <CardDescription>Volume de pedidos ao longo do dia (dados de exemplo).</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] w-full p-2">
             <ChartContainer config={chartConfig}>
-              <BarChart data={dailyOrdersData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <BarChart data={dailyOrdersDataExample} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
                 <XAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -151,7 +158,7 @@ export default function DashboardPage() {
         <Card className="col-span-1 md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
-              <CardTitle>Últimos Pedidos (Exemplo)</CardTitle>
+              <CardTitle>Últimos Pedidos</CardTitle>
               <CardDescription>
                 Acompanhe os pedidos mais recentes.
               </CardDescription>
@@ -168,7 +175,7 @@ export default function DashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead className="hidden sm:table-cell">Produto</TableHead>
+                  <TableHead className="hidden sm:table-cell">Cliente</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right hidden sm:table-cell">Hora</TableHead>
@@ -176,27 +183,45 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{order.product}</TableCell>
-                    <TableCell>
-                       <Badge variant={"outline"} className={`whitespace-nowrap ${getStatusBadgeClass(order.status)}`}>
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{order.total}</TableCell>
-                    <TableCell className="text-right hidden sm:table-cell">{order.time}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/dashboard/pedidos/${order.id}`}>
-                          <ExternalLink className="h-4 w-4" />
-                           <span className="sr-only">Ver pedido</span>
-                        </Link>
-                      </Button>
+                {isLoadingRecentOrders ? (
+                   <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+                      <p className="mt-2 text-muted-foreground">Carregando últimos pedidos...</p>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{order.clienteNome || 'N/A'}</TableCell> {/* Assuming clienteNome */}
+                      <TableCell>
+                         <Badge variant={"outline"} className={`whitespace-nowrap ${getStatusBadgeClass(order.status)}`}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">R$ {order.valorTotal?.toFixed(2).replace('.', ',') || '0,00'}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">
+                        {order.dataCriacao ? new Date(order.dataCriacao.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'}) : 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/dashboard/pedidos/${order.id}`}>
+                            <ExternalLink className="h-4 w-4" />
+                             <span className="sr-only">Ver pedido</span>
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <Info className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">Nenhum pedido recente encontrado.</p>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -205,6 +230,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-    
-
     

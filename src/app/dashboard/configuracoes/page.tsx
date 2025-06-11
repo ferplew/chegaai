@@ -18,17 +18,17 @@ export default function ConfiguracoesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Informações do Restaurante (Exemplo)</CardTitle>
-          <CardDescription>Estes dados podem ser movidos para "Perfil do Negócio".</CardDescription>
+          <CardTitle>Informações do Restaurante</CardTitle>
+          <CardDescription>Estes dados podem ser movidos para "Perfil do Negócio" em breve.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="restaurantName">Nome do Restaurante</Label>
-            <Input id="restaurantName" defaultValue="Restaurante Exemplo" />
+            <Input id="restaurantName" placeholder="Nome do seu restaurante" />
           </div>
           <div className="space-y-1">
             <Label htmlFor="restaurantAddress">Endereço</Label>
-            <Input id="restaurantAddress" defaultValue="Rua das Palmeiras, 123" />
+            <Input id="restaurantAddress" placeholder="Endereço principal do restaurante" />
           </div>
           <Button>Salvar Informações</Button>
         </CardContent>
@@ -36,7 +36,7 @@ export default function ConfiguracoesPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Conexões Externas (APIs) (Exemplo)</CardTitle>
+          <CardTitle>Conexões Externas (APIs)</CardTitle>
           <CardDescription>Integre com outros serviços (ex: iFood, apps de delivery).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

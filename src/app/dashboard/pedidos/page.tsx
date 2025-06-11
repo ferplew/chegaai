@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Added import for Label
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, PlusCircle, Search, CalendarDays, Download } from "lucide-react";
+import { Filter, PlusCircle, Search, Info, Loader2 } from "lucide-react"; // Added Info, Loader2
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,36 +22,91 @@ import {
   endOfMonth,
   differenceInDays,
   format,
+  parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
+import { db } from '@/lib/firebase/config';
+import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query } from 'firebase/firestore';
 
-// Mock data for demonstration
-const mockPedidos = [
-  { id: "PED1001", cliente: "João Silva", itens: "2x Pizza M, 1x Refri G", total: "R$ 95,00", status: "Novo", hora: "10:15" },
-  { id: "PED1002", cliente: "Maria Oliveira", itens: "1x Hambúrguer X, 1x Batata F.", total: "R$ 42,30", status: "Em preparo", hora: "10:12" },
-  { id: "PED1003", cliente: "Carlos Pereira", itens: "3x Sushi Combo", total: "R$ 180,00", status: "Pronto", hora: "10:05" },
-  { id: "PED1004", cliente: "Ana Costa", itens: "1x Salada Caesar", total: "R$ 30,00", status: "Finalizado", hora: "09:50" },
-  { id: "PED1005", cliente: "Pedro Martins", itens: "1x Lasanha B., 2x Suco L.", total: "R$ 65,00", status: "Em preparo", hora: "10:20" },
-];
+interface Pedido {
+  id: string;
+  nomeCliente: string;
+  itensPedido: string; // Consider parsing or showing a summary
+  valorTotal: number;
+  status: 'Novo' | 'Em preparo' | 'Pronto' | 'Finalizado' | 'Cancelado';
+  dataCriacao: Timestamp;
+}
 
 function getStatusBadgeClass(status: string): string {
-  switch (status.toLowerCase()) {
+  switch (status?.toLowerCase()) {
     case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
     case "pronto": return "bg-primary/20 text-primary border-primary/30";
     case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+    case "cancelado": return "bg-destructive/20 text-destructive border-destructive/30";
     default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
   }
 }
 
 export default function PedidosPage() {
+  const [pedidos, setPedidos] = React.useState<Pedido[]>([]);
+  const [isLoading, setIsLoading] React.useState(true);
+  const [searchTerm, setSearchTerm] React.useState("");
+  const [statusFilter, setStatusFilter] React.useState<string>("todos");
+
   const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
-    from: startOfDay(new Date()), // Default to today
+    from: startOfDay(new Date()), 
     to: endOfDay(new Date()),
   });
   const { toast } = useToast();
   const MAX_DATE_RANGE_DAYS = 90;
+
+  React.useEffect(() => {
+    setIsLoading(true);
+    let q: Query = collection(db, 'pedidos');
+
+    // Date filtering
+    if (selectedDateRange?.from) {
+      q = query(q, where('dataCriacao', '>=', Timestamp.fromDate(startOfDay(selectedDateRange.from))));
+    }
+    if (selectedDateRange?.to) {
+      q = query(q, where('dataCriacao', '<=', Timestamp.fromDate(endOfDay(selectedDateRange.to))));
+    }
+
+    // Status filtering
+    if (statusFilter !== "todos") {
+      q = query(q, where('status', '==', statusFilter));
+    }
+    
+    // Order by creation date descending
+    q = query(q, orderBy('dataCriacao', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const pedidosData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Pedido));
+      
+      // Client-side search filtering (Firestore doesn't support complex text search efficiently on its own for this case)
+      const filteredByName = searchTerm
+        ? pedidosData.filter(pedido =>
+            pedido.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            pedido.id.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : pedidosData;
+
+      setPedidos(filteredByName);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar pedidos: ", error);
+      toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [selectedDateRange, statusFilter, searchTerm, toast]);
+
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     if (range?.from && range?.to) {
@@ -61,8 +116,6 @@ export default function PedidosPage() {
           description: `Por favor, selecione um intervalo de no máximo ${MAX_DATE_RANGE_DAYS} dias.`,
           variant: "destructive",
         });
-        // Optionally, revert to the previous valid range or a default
-        // For now, we'll allow the selection but show the toast.
       }
     }
     setSelectedDateRange(range);
@@ -95,6 +148,11 @@ export default function PedidosPage() {
     return format(range.from, "dd/MM/yy", { locale: ptBR });
   };
 
+  const formatDateFromTimestamp = (timestamp: Timestamp | undefined): string => {
+    if (!timestamp) return 'N/A';
+    return format(timestamp.toDate(), "HH:mm", { locale: ptBR });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -123,22 +181,29 @@ export default function PedidosPage() {
             <div className="relative flex-grow lg:max-w-xs w-full">
               <Label htmlFor="search-pedidos" className="sr-only">Buscar</Label>
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input id="search-pedidos" type="search" placeholder="Buscar por ID ou cliente..." className="pl-8 w-full" />
+              <Input 
+                id="search-pedidos" 
+                type="search" 
+                placeholder="Buscar por ID ou cliente..." 
+                className="pl-8 w-full" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <div className="w-full lg:w-auto">
               <Label htmlFor="status-filter" className="sr-only">Status</Label>
-              <Select defaultValue="todos">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status-filter" className="w-full lg:w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status do Pedido" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os Status</SelectItem>
-                  <SelectItem value="novo">Novo</SelectItem>
-                  <SelectItem value="em_preparo">Em Preparo</SelectItem>
-                  <SelectItem value="pronto">Pronto</SelectItem>
-                  <SelectItem value="finalizado">Finalizado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="Novo">Novo</SelectItem>
+                  <SelectItem value="Em preparo">Em Preparo</SelectItem>
+                  <SelectItem value="Pronto">Pronto</SelectItem>
+                  <SelectItem value="Finalizado">Finalizado</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -149,22 +214,17 @@ export default function PedidosPage() {
                 <DatePickerWithRange
                 date={selectedDateRange}
                 onDateChange={handleDateRangeChange}
-                // className="max-w-sm" // Already handled by Popover content width
                 />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {/* TODO: Implement actual filtering of pedidos based on selectedDateRange */}
-          <p className="p-4 text-sm text-muted-foreground">
-            A tabela abaixo ainda exibe dados de exemplo. A filtragem por data será implementada em breve.
-          </p>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead className="hidden md:table-cell">Itens</TableHead>
+                <TableHead className="hidden md:table-cell">Itens (resumo)</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right hidden sm:table-cell">Hora</TableHead>
@@ -172,29 +232,40 @@ export default function PedidosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPedidos.map((pedido) => (
-                <TableRow key={pedido.id}>
-                  <TableCell className="font-medium">{pedido.id}</TableCell>
-                  <TableCell>{pedido.cliente}</TableCell>
-                  <TableCell className="hidden md:table-cell max-w-xs truncate">{pedido.itens}</TableCell>
-                  <TableCell className="text-right">{pedido.total}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`whitespace-nowrap ${getStatusBadgeClass(pedido.status)}`}>
-                      {pedido.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right hidden sm:table-cell">{pedido.hora}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/dashboard/pedidos/${pedido.id}`}>Ver Detalhes</Link>
-                    </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                    <p className="mt-2 text-muted-foreground">Carregando pedidos...</p>
                   </TableCell>
                 </TableRow>
-              ))}
-               {mockPedidos.length === 0 && (
+              ) : pedidos.length > 0 ? (
+                pedidos.map((pedido) => (
+                  <TableRow key={pedido.id}>
+                    <TableCell className="font-medium">{pedido.id.substring(0, 7)}...</TableCell>
+                    <TableCell>{pedido.nomeCliente}</TableCell>
+                    <TableCell className="hidden md:table-cell max-w-xs truncate">
+                      {pedido.itensPedido.length > 50 ? `${pedido.itensPedido.substring(0, 50)}...` : pedido.itensPedido}
+                    </TableCell>
+                    <TableCell className="text-right">R$ {pedido.valorTotal.toFixed(2).replace('.', ',')}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`whitespace-nowrap ${getStatusBadgeClass(pedido.status)}`}>
+                        {pedido.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right hidden sm:table-cell">{formatDateFromTimestamp(pedido.dataCriacao)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/dashboard/pedidos/${pedido.id}`}>Ver Detalhes</Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    Nenhum pedido encontrado para o período selecionado.
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <Info className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">Nenhum pedido encontrado para os filtros selecionados.</p>
                   </TableCell>
                 </TableRow>
               )}
@@ -205,5 +276,3 @@ export default function PedidosPage() {
     </div>
   );
 }
-
-    
