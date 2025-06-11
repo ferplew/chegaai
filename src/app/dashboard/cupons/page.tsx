@@ -3,12 +3,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, Ticket } from "lucide-react";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -40,6 +41,8 @@ export default function CuponsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [cupomToDelete, setCupomToDelete] = useState<Cupom | null>(null);
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -74,10 +77,33 @@ export default function CuponsPage() {
     toast({ title: "Em breve", description: `Funcionalidade de editar cupom ${id} será implementada.`});
   }
 
-  const handleDelete = (id: string) => {
-    // TODO: Implementar lógica de exclusão com confirmação
-    toast({ title: "Em breve", description: `Funcionalidade de excluir cupom ${id} será implementada.`});
-  }
+  const handleOpenDeleteDialog = (cupom: Cupom) => {
+    setCupomToDelete(cupom);
+    setIsConfirmDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!cupomToDelete) return;
+    setIsLoading(true); // Can use a specific loading state for delete if needed
+    try {
+      await deleteDoc(doc(db, 'cupons', cupomToDelete.id));
+      toast({
+        title: "Cupom excluído!",
+        description: `O cupom "${cupomToDelete.nome}" foi removido com sucesso.`,
+      });
+    } catch (err) {
+      console.error("Erro ao excluir cupom: ", err);
+      toast({
+        title: "Erro ao excluir",
+        description: `Não foi possível remover o cupom "${cupomToDelete.nome}". Tente novamente.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsConfirmDeleteDialogOpen(false);
+      setCupomToDelete(null);
+      setIsLoading(false);
+    }
+  };
 
 
   return (
@@ -103,7 +129,7 @@ export default function CuponsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
+          {isLoading && cupons.length === 0 ? ( // Show main loader only if no cupons yet
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="ml-2 text-muted-foreground">Carregando cupons...</p>
@@ -156,7 +182,7 @@ export default function CuponsPage() {
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(cupom.id)}
+                          onClick={() => handleOpenDeleteDialog(cupom)}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Excluir</span>
@@ -182,6 +208,29 @@ export default function CuponsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isConfirmDeleteDialogOpen} onOpenChange={setIsConfirmDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o cupom <span className="font-semibold text-primary">{cupomToDelete?.nome}</span>? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCupomToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isLoading} // Disable button while deleting
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
