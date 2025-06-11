@@ -190,11 +190,14 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Erro no login com Google:", error); // Log completo do erro no console
       let errorMessage = "Ocorreu um erro ao tentar fazer login com o Google.";
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "A janela de login do Google foi fechada antes da conclusão.";
       } else if (error.code === 'auth/cancelled-popup-request') {
         errorMessage = "Múltiplas tentativas de login com o Google. Tente novamente.";
+      } else if (error.code) {
+        errorMessage = `Erro: ${error.code}. Consulte o console para mais detalhes.`;
       }
       toast({
         title: "Erro no Login com Google",
@@ -366,6 +369,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-
-    
