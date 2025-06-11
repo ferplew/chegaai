@@ -21,6 +21,8 @@ import {
   onAuthStateChanged,
   type User
 } from 'firebase/auth';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { isValidCPF, isValidCNPJ } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,6 +32,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
+  const [documentType, setDocumentType] = useState<'cpf' | 'cnpj'>('cpf');
+  const [documentValue, setDocumentValue] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
@@ -38,40 +44,68 @@ export default function LoginPage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if (user) {
-        // Optionally redirect if user is already logged in,
-        // but for login page, usually we don't auto-redirect immediately
         // router.push('/dashboard'); 
       }
     });
     return () => unsubscribe();
   }, [router]);
 
+  const clearRegistrationFields = () => {
+    setRestaurantName('');
+    setDocumentType('cpf');
+    setDocumentValue('');
+    setPhone('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
 
-    if (action === 'register' && password !== confirmPassword) {
-      toast({
-        title: "Erro de Cadastro",
-        description: "As senhas não coincidem.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     if (action === 'register') {
+      if (password !== confirmPassword) {
+        toast({
+          title: "Erro de Cadastro",
+          description: "As senhas não coincidem.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!restaurantName.trim()) {
+        toast({ title: "Erro de Cadastro", description: "Nome do estabelecimento é obrigatório.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (documentType === 'cpf' && !isValidCPF(documentValue)) {
+        toast({ title: "Erro de Cadastro", description: "CPF inválido.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (documentType === 'cnpj' && !isValidCNPJ(documentValue)) {
+        toast({ title: "Erro de Cadastro", description: "CNPJ inválido.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      if (!phone.trim()) { // Simple validation for phone, can be improved
+        toast({ title: "Erro de Cadastro", description: "Telefone/WhatsApp é obrigatório.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+
       try {
+        // Here you would typically save restaurantName, documentType, documentValue, phone to your database (e.g., Firestore)
+        // associated with the user's UID after successful account creation.
+        // For this example, we are focusing on form validation and Firebase Auth user creation.
         await createUserWithEmailAndPassword(auth, email, password);
         toast({
           title: "Cadastro realizado!",
           description: "Você já pode fazer login.",
         });
-        setAction('login'); // Switch to login form after successful registration
-        // Clear password fields after registration
-        setPassword('');
-        setConfirmPassword('');
+        setAction('login'); 
+        clearRegistrationFields(); // Clear all fields after successful registration
       } catch (error: any) {
         let errorMessage = "Ocorreu um erro durante o cadastro.";
         if (error.code === 'auth/email-already-in-use') {
@@ -117,6 +151,9 @@ export default function LoginPage() {
         title: "Login com Google bem-sucedido!",
         description: "Redirecionando para o painel...",
       });
+      // For Google Sign-In, if it's their first time, you might redirect them
+      // to a form to complete profile details like restaurant name, document, phone.
+      // This example directly routes to dashboard.
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = "Ocorreu um erro ao tentar fazer login com o Google.";
@@ -149,7 +186,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -177,19 +214,78 @@ export default function LoginPage() {
               />
             </div>
             {action === 'register' && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="********"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="bg-input"
-                  autoComplete="new-password"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="********"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="bg-input"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="restaurantName">Nome do Estabelecimento</Label>
+                  <Input
+                    id="restaurantName"
+                    type="text"
+                    placeholder="Ex: Pizzaria Delícia"
+                    value={restaurantName}
+                    onChange={(e) => setRestaurantName(e.target.value)}
+                    required
+                    className="bg-input"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Tipo de Documento</Label>
+                    <RadioGroup
+                        value={documentType}
+                        onValueChange={(value: 'cpf' | 'cnpj') => setDocumentType(value)}
+                        className="flex pt-1 space-x-4"
+                    >
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cpf" id="cpf-radio" />
+                        <Label htmlFor="cpf-radio" className="font-normal">CPF</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cnpj" id="cnpj-radio" />
+                        <Label htmlFor="cnpj-radio" className="font-normal">CNPJ</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="documentValue">{documentType === 'cpf' ? 'CPF' : 'CNPJ'}</Label>
+                  <Input
+                    id="documentValue"
+                    type="text"
+                    placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                    value={documentValue}
+                    onChange={(e) => setDocumentValue(e.target.value)}
+                    required
+                    className="bg-input"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone/WhatsApp</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(00) 90000-0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="bg-input"
+                    autoComplete="tel"
+                  />
+                </div>
+              </>
             )}
             <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
               {isLoading ? (action === 'login' ? 'Entrando...' : 'Cadastrando...') : (action === 'login' ? 'Entrar com E-mail' : 'Cadastrar')}
@@ -219,10 +315,9 @@ export default function LoginPage() {
           <button
             onClick={() => {
               setAction(action === 'login' ? 'register' : 'login');
-              // Clear form fields when switching action
-              setEmail('');
-              setPassword('');
-              setConfirmPassword('');
+              clearRegistrationFields(); // Clear form fields when switching action
+              // Keep email if switching from register to login and email was filled
+              // but for simplicity now, clearing all.
             }}
             className="text-muted-foreground hover:text-primary transition-colors"
           >
