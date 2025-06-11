@@ -70,9 +70,15 @@ const settingsNavItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { state, toggleSidebar, isMobile } = useSidebar();
+  const sidebarContext = useSidebar();
   const router = useRouter();
   const { toast } = useToast();
+
+  if (!sidebarContext) {
+    console.warn("DashboardSidebar: SidebarContext is not available. Rendering will be skipped.");
+    return null; 
+  }
+  const { state, toggleSidebar, isMobile } = sidebarContext;
 
   const handleSignOut = async () => {
     try {

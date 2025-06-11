@@ -8,7 +8,14 @@ import { PanelLeft } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
 export function DashboardHeader() {
-  const { toggleSidebar, isMobile, state: sidebarState } = useSidebar();
+  const sidebarContext = useSidebar();
+
+  if (!sidebarContext) {
+    console.warn("DashboardHeader: SidebarContext is not available. Rendering will be skipped.");
+    return null; 
+  }
+  const { toggleSidebar, isMobile, state: sidebarState } = sidebarContext;
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 shadow-sm backdrop-blur-md md:px-6">
