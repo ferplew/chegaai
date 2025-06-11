@@ -8,7 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, ExternalLink, QrCode, Info, LayoutList, Download, RefreshCw, Loader2 } from "lucide-react";
-import { QRCodeCanvas } from 'qrcode.react';
+import dynamic from 'next/dynamic';
+
+const QRCodeCanvas = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeCanvas), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-48 w-48"><Loader2 className="h-8 w-8 animate-spin text-primary"/></div>,
+});
+
 
 export default function CardapioVirtualPage() {
   const { toast } = useToast();
@@ -16,7 +22,7 @@ export default function CardapioVirtualPage() {
   const [publicLink, setPublicLink] = useState("");
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
-  const qrCanvasRef = useRef<HTMLDivElement>(null); // Ref for the canvas container
+  const qrCanvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,7 +50,6 @@ export default function CardapioVirtualPage() {
       return;
     }
     setIsGeneratingQr(true);
-    // Use a timeout to ensure the canvas is rendered before converting to data URL
     setTimeout(() => {
       const canvasElement = qrCanvasRef.current?.querySelector('canvas');
       if (canvasElement) {
@@ -52,10 +57,27 @@ export default function CardapioVirtualPage() {
         setQrCodeDataUrl(dataUrl);
         toast({ title: "QR Code Gerado!", description: "O QR Code para seu cardápio está pronto." });
       } else {
-        toast({ title: "Erro ao gerar QR Code", description: "Não foi possível encontrar o canvas do QR Code.", variant: "destructive"});
+        // Se o canvas não for encontrado, é provável que o QRCodeCanvas ainda não tenha renderizado.
+        // Isso pode acontecer se o dynamic import ainda estiver carregando.
+        // Uma melhoria seria esperar o componente QRCodeCanvas estar pronto.
+        toast({ title: "Aguarde", description: "Gerando QR Code, por favor, espere um momento.", variant: "default"});
+        // Tentar novamente após um tempo maior se o canvas não for encontrado imediatamente.
+        // Ou usar um estado para controlar quando o QRCodeCanvas está pronto para ser lido.
+        setTimeout(() => {
+             const delayedCanvasElement = qrCanvasRef.current?.querySelector('canvas');
+             if (delayedCanvasElement) {
+                const dataUrl = delayedCanvasElement.toDataURL('image/png');
+                setQrCodeDataUrl(dataUrl);
+                toast({ title: "QR Code Gerado!", description: "O QR Code para seu cardápio está pronto." });
+             } else {
+                toast({ title: "Erro ao gerar QR Code", description: "Não foi possível encontrar o canvas do QR Code após espera.", variant: "destructive"});
+             }
+             setIsGeneratingQr(false);
+        }, 1000); // Aumenta o delay para dar mais tempo ao dynamic import
+        return; // Retorna para não setar isGeneratingQr para false prematuramente
       }
       setIsGeneratingQr(false);
-    }, 100); // Small delay to allow canvas to render
+    }, 150); // Aumentado ligeiramente o delay inicial
   };
 
   const downloadQRCode = () => {
@@ -119,8 +141,7 @@ export default function CardapioVirtualPage() {
             <CardDescription>Permita que seus clientes acessem o cardápio escaneando o QR Code.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Hidden canvas for qrcode.react to render into */}
-            <div ref={qrCanvasRef} className="hidden">
+            <div ref={qrCanvasRef} className={qrCodeDataUrl ? 'hidden' : 'flex justify-center items-center min-h-[208px]'}>
               {publicLink && <QRCodeCanvas value={publicLink} size={256} level="H" includeMargin={true} />}
             </div>
 
@@ -129,12 +150,21 @@ export default function CardapioVirtualPage() {
                 <img src={qrCodeDataUrl} alt="QR Code do Cardápio" className="w-48 h-48 rounded-md shadow-md" />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-52 border-2 border-dashed border-muted rounded-lg bg-muted/30">
-                <div className="text-center text-muted-foreground">
-                  <QrCode className="mx-auto h-12 w-12 mb-2" />
-                  <p>Clique em "Gerar QR Code" abaixo.</p>
+               !publicLink ? (
+                <div className="flex items-center justify-center h-52 border-2 border-dashed border-muted rounded-lg bg-muted/30">
+                    <div className="text-center text-muted-foreground">
+                        <Loader2 className="mx-auto h-12 w-12 mb-2 animate-spin" />
+                        <p>Aguardando link público...</p>
+                    </div>
                 </div>
-              </div>
+               ) : (
+                <div className="flex items-center justify-center h-52 border-2 border-dashed border-muted rounded-lg bg-muted/30">
+                    <div className="text-center text-muted-foreground">
+                    <QrCode className="mx-auto h-12 w-12 mb-2" />
+                    <p>Clique em "Gerar QR Code" abaixo.</p>
+                    </div>
+                </div>
+               )
             )}
             
             <div className="flex gap-2">

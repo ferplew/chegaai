@@ -91,14 +91,6 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    console.log("--- Iniciando autenticação via formulário ---");
-    console.log("Firebase Auth instance name:", auth.name);
-    console.log("Firebase Auth instance configured authDomain:", auth.config.authDomain);
-    if (typeof window !== "undefined") {
-      console.log("Current window.location.host (origem da requisição):", window.location.host);
-    }
-
-
     if (action === 'register') {
       if (password !== confirmPassword) {
         toast({
@@ -193,13 +185,6 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    console.log("--- Iniciando autenticação via Google ---");
-    console.log("Firebase Auth instance name:", auth.name);
-    console.log("Firebase Auth instance configured authDomain:", auth.config.authDomain);
-    if (typeof window !== "undefined") {
-      console.log("Current window.location.host (origem da requisição):", window.location.host);
-    }
-
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -397,4 +382,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
