@@ -1,11 +1,29 @@
+
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, PlusCircle, Search } from "lucide-react";
-import Link from "next/link";
+import { Filter, PlusCircle, Search, CalendarDays, Download } from "lucide-react";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { useToast } from "@/hooks/use-toast";
+import {
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  differenceInDays,
+  format,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 
 // Mock data for demonstration
 const mockPedidos = [
@@ -27,6 +45,56 @@ function getStatusBadgeClass(status: string): string {
 }
 
 export default function PedidosPage() {
+  const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
+    from: startOfDay(new Date()), // Default to today
+    to: endOfDay(new Date()),
+  });
+  const { toast } = useToast();
+  const MAX_DATE_RANGE_DAYS = 90;
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range?.from && range?.to) {
+      if (differenceInDays(range.to, range.from) > MAX_DATE_RANGE_DAYS) {
+        toast({
+          title: "Intervalo de datas muito longo",
+          description: `Por favor, selecione um intervalo de no máximo ${MAX_DATE_RANGE_DAYS} dias.`,
+          variant: "destructive",
+        });
+        // Optionally, revert to the previous valid range or a default
+        // For now, we'll allow the selection but show the toast.
+      }
+    }
+    setSelectedDateRange(range);
+  };
+
+  const setPredefinedRange = (from: Date, to: Date) => {
+    setSelectedDateRange({ from, to });
+  };
+
+  const handleSetToday = () => {
+    const today = new Date();
+    setPredefinedRange(startOfDay(today), endOfDay(today));
+  };
+
+  const handleSetThisWeek = () => {
+    const today = new Date();
+    setPredefinedRange(startOfWeek(today, { locale: ptBR }), endOfWeek(today, { locale: ptBR }));
+  };
+
+  const handleSetThisMonth = () => {
+    const today = new Date();
+    setPredefinedRange(startOfMonth(today), endOfMonth(today));
+  };
+  
+  const formatRangeForDisplay = (range: DateRange | undefined): string => {
+    if (!range || !range.from) return "Nenhum período selecionado";
+    if (range.to) {
+      return `${format(range.from, "dd/MM/yy", { locale: ptBR })} - ${format(range.to, "dd/MM/yy", { locale: ptBR })}`;
+    }
+    return format(range.from, "dd/MM/yy", { locale: ptBR });
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -43,29 +111,53 @@ export default function PedidosPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Pedidos</CardTitle>
-          <CardDescription>Filtre e acompanhe os pedidos em tempo real.</CardDescription>
-          <div className="mt-4 flex flex-col sm:flex-row gap-2 items-center">
-            <div className="relative flex-grow w-full sm:w-auto">
+          <CardTitle>Filtrar Pedidos</CardTitle>
+          <CardDescription>
+            Busque por ID, cliente, status ou período. 
+            <span className="block text-xs text-muted-foreground mt-1">
+                Período selecionado: {formatRangeForDisplay(selectedDateRange)}
+            </span>
+          </CardDescription>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-2 items-end">
+            <div className="relative flex-grow lg:max-w-xs w-full">
+              <Label htmlFor="search-pedidos" className="sr-only">Buscar</Label>
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Buscar por ID ou cliente..." className="pl-8 w-full" />
+              <Input id="search-pedidos" type="search" placeholder="Buscar por ID ou cliente..." className="pl-8 w-full" />
             </div>
-            <Select defaultValue="todos">
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Status do Pedido" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Status</SelectItem>
-                <SelectItem value="novo">Novo</SelectItem>
-                <SelectItem value="em_preparo">Em Preparo</SelectItem>
-                <SelectItem value="pronto">Pronto</SelectItem>
-                <SelectItem value="finalizado">Finalizado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-full lg:w-auto">
+              <Label htmlFor="status-filter" className="sr-only">Status</Label>
+              <Select defaultValue="todos">
+                <SelectTrigger id="status-filter" className="w-full lg:w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Status do Pedido" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os Status</SelectItem>
+                  <SelectItem value="novo">Novo</SelectItem>
+                  <SelectItem value="em_preparo">Em Preparo</SelectItem>
+                  <SelectItem value="pronto">Pronto</SelectItem>
+                  <SelectItem value="finalizado">Finalizado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+             <div className="flex flex-wrap items-center gap-2 col-span-full lg:col-auto">
+                <Button variant="outline" size="sm" onClick={handleSetToday}>Hoje</Button>
+                <Button variant="outline" size="sm" onClick={handleSetThisWeek}>Esta Semana</Button>
+                <Button variant="outline" size="sm" onClick={handleSetThisMonth}>Este Mês</Button>
+                <DatePickerWithRange
+                date={selectedDateRange}
+                onDateChange={handleDateRangeChange}
+                // className="max-w-sm" // Already handled by Popover content width
+                />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
+          {/* TODO: Implement actual filtering of pedidos based on selectedDateRange */}
+          <p className="p-4 text-sm text-muted-foreground">
+            A tabela abaixo ainda exibe dados de exemplo. A filtragem por data será implementada em breve.
+          </p>
           <Table>
             <TableHeader>
               <TableRow>
@@ -98,6 +190,13 @@ export default function PedidosPage() {
                   </TableCell>
                 </TableRow>
               ))}
+               {mockPedidos.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    Nenhum pedido encontrado para o período selecionado.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -105,3 +204,5 @@ export default function PedidosPage() {
     </div>
   );
 }
+
+    
