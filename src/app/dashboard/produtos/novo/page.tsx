@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info } from "lucide-react";
+import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
 import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
@@ -48,6 +48,9 @@ export default function NovoItemPage() {
   const [aiKeywords, setAiKeywords] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState<SuggestItemDetailsOutput | null>(null);
   const [isLoadingAiText, setIsLoadingAiText] = useState(false);
+  const [selectedAiTitle, setSelectedAiTitle] = useState<string | null>(null);
+  const [selectedAiDescription, setSelectedAiDescription] = useState<string | null>(null);
+
 
   // AI Image Generation
   const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
@@ -90,6 +93,8 @@ export default function NovoItemPage() {
     }
     setIsLoadingAiText(true);
     setAiSuggestions(null);
+    setSelectedAiTitle(null);
+    setSelectedAiDescription(null);
     try {
       const result = await suggestItemDetails({ keywords: aiKeywords });
       setAiSuggestions(result);
@@ -100,6 +105,16 @@ export default function NovoItemPage() {
     } finally {
       setIsLoadingAiText(false);
     }
+  };
+
+  const handleApplyAiTitle = (title: string) => {
+    setNome(title);
+    setSelectedAiTitle(title);
+  };
+
+  const handleApplyAiDescription = (description: string) => {
+    setDescricao(description);
+    setSelectedAiDescription(description);
   };
 
   const handleGenerateImage = async () => {
@@ -212,7 +227,7 @@ export default function NovoItemPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA para Detalhes</CardTitle>
           <CardDescription>
-            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir título, descrição e adicionais.
+            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir títulos, descrições e adicionais.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -225,36 +240,60 @@ export default function NovoItemPage() {
               className="flex-grow"
             />
             <Button onClick={handleSuggestDetails} disabled={isLoadingAiText} className="w-full sm:w-auto">
-              {isLoadingAiText ? <Loader2 className="animate-spin" /> : <Wand2 />}
+              {isLoadingAiText ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
               Sugerir Detalhes
             </Button>
           </div>
           {aiSuggestions && (
-            <div className="space-y-3 p-4 border rounded-md bg-muted/30">
-              {aiSuggestions.suggestedTitle && (
-                <div>
-                  <Label className="font-semibold">Título Sugerido:</Label>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm">{aiSuggestions.suggestedTitle}</p>
-                    <Button size="sm" variant="outline" onClick={() => setNome(aiSuggestions.suggestedTitle!)}>Usar</Button>
+            <div className="space-y-4 p-4 border rounded-md bg-muted/30">
+              {/* Suggested Titles */}
+              {aiSuggestions.suggestedTitles && aiSuggestions.suggestedTitles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="font-semibold text-base">Títulos Sugeridos:</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {aiSuggestions.suggestedTitles.map((title, index) => (
+                      <Button
+                        key={`title-${index}`}
+                        variant={selectedAiTitle === title ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleApplyAiTitle(title)}
+                        className="text-left justify-start h-auto py-2 leading-snug"
+                      >
+                        {selectedAiTitle === title && <CheckCircle className="h-4 w-4 mr-2 text-primary-foreground group-hover:text-primary-foreground" />}
+                        {title}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               )}
-              {aiSuggestions.suggestedDescription && (
-                <div>
-                  <Label className="font-semibold">Descrição Sugerida:</Label>
-                   <div className="flex justify-between items-start">
-                    <p className="text-sm whitespace-pre-line">{aiSuggestions.suggestedDescription}</p>
-                    <Button size="sm" variant="outline" onClick={() => setDescricao(aiSuggestions.suggestedDescription!)} className="ml-2 flex-shrink-0">Usar</Button>
-                  </div>
+
+              {/* Suggested Descriptions */}
+              {aiSuggestions.suggestedDescriptions && aiSuggestions.suggestedDescriptions.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="font-semibold text-base">Descrições Sugeridas:</Label>
+                  {aiSuggestions.suggestedDescriptions.map((desc, index) => (
+                     <Button
+                        key={`desc-${index}`}
+                        variant={selectedAiDescription === desc ? "default" : "outline"}
+                        onClick={() => handleApplyAiDescription(desc)}
+                        className="w-full text-left justify-start h-auto py-2 mb-2 whitespace-normal leading-snug text-sm"
+                      >
+                       <div className="flex items-start">
+                         {selectedAiDescription === desc && <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-primary-foreground group-hover:text-primary-foreground" />}
+                         <span>{desc}</span>
+                       </div>
+                      </Button>
+                  ))}
                 </div>
               )}
+
+              {/* Suggested Additionals */}
               {aiSuggestions.suggestedAdditionals && aiSuggestions.suggestedAdditionals.length > 0 && (
-                <div>
-                  <Label className="font-semibold">Nomes de Adicionais Sugeridos:</Label>
-                  <ul className="list-disc list-inside text-sm space-y-1 pl-1">
+                <div className="space-y-1">
+                  <Label className="font-semibold text-base">Nomes de Adicionais Sugeridos:</Label>
+                  <ul className="list-disc list-inside text-sm space-y-1 pl-1 text-muted-foreground">
                     {aiSuggestions.suggestedAdditionals.map((ad, index) => (
-                      <li key={index}>{ad} (você pode adicionar o preço abaixo)</li>
+                      <li key={`add-${index}`}>{ad} (você pode adicionar o preço abaixo)</li>
                     ))}
                   </ul>
                 </div>
@@ -405,7 +444,7 @@ export default function NovoItemPage() {
                         </div>
                         <div className="text-center text-sm text-muted-foreground my-2">OU</div>
                          <Button onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim()} className="w-full">
-                            {isLoadingAiImage ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                            {isLoadingAiImage ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
                             Gerar Imagem com IA (usando o nome do item)
                         </Button>
                         {isLoadingAiImage && <p className="text-xs text-muted-foreground text-center">A IA está criando, pode levar alguns segundos...</p>}
@@ -455,6 +494,3 @@ export default function NovoItemPage() {
     </div>
   );
 }
-
-
-    
