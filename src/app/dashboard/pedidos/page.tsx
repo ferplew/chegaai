@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, PlusCircle, Search, Info, Loader2 } from "lucide-react"; // Added Info, Loader2
+import { Filter, PlusCircle, Search, Info, Loader2 } from "lucide-react"; 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -32,7 +32,7 @@ import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query } 
 interface Pedido {
   id: string;
   nomeCliente: string;
-  itensPedido: string; // Consider parsing or showing a summary
+  itensPedido: string; 
   valorTotal: number;
   status: 'Novo' | 'Em preparo' | 'Pronto' | 'Finalizado' | 'Cancelado';
   dataCriacao: Timestamp;
@@ -62,50 +62,58 @@ export default function PedidosPage() {
   const { toast } = useToast();
   const MAX_DATE_RANGE_DAYS = 90;
 
+  // React.useEffect(() => {
+  //   setIsLoading(true);
+  //   let q: Query = collection(db, 'pedidos');
+
+  //   if (selectedDateRange?.from) {
+  //     q = query(q, where('dataCriacao', '>=', Timestamp.fromDate(startOfDay(selectedDateRange.from))));
+  //   }
+  //   if (selectedDateRange?.to) {
+  //     q = query(q, where('dataCriacao', '<=', Timestamp.fromDate(endOfDay(selectedDateRange.to))));
+  //   }
+
+  //   if (statusFilter !== "todos") {
+  //     q = query(q, where('status', '==', statusFilter));
+  //   }
+    
+  //   q = query(q, orderBy('dataCriacao', 'desc'));
+
+  //   const unsubscribe = onSnapshot(q, (querySnapshot) => {
+  //     const pedidosData = querySnapshot.docs.map(doc => ({
+  //       id: doc.id,
+  //       ...doc.data()
+  //     } as Pedido));
+      
+  //     const filteredByName = searchTerm
+  //       ? pedidosData.filter(pedido =>
+  //           pedido.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //           pedido.id.toLowerCase().includes(searchTerm.toLowerCase())
+  //         )
+  //       : pedidosData;
+
+  //     setPedidos(filteredByName);
+  //     setIsLoading(false);
+  //   }, (error) => {
+  //     console.error("Erro ao buscar pedidos: ", error);
+  //     toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
+  //     setIsLoading(false);
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [selectedDateRange, statusFilter, searchTerm, toast]);
+
+  // --- TEMPORARY: Simulate loading and then no data for debugging ---
   React.useEffect(() => {
     setIsLoading(true);
-    let q: Query = collection(db, 'pedidos');
-
-    // Date filtering
-    if (selectedDateRange?.from) {
-      q = query(q, where('dataCriacao', '>=', Timestamp.fromDate(startOfDay(selectedDateRange.from))));
-    }
-    if (selectedDateRange?.to) {
-      q = query(q, where('dataCriacao', '<=', Timestamp.fromDate(endOfDay(selectedDateRange.to))));
-    }
-
-    // Status filtering
-    if (statusFilter !== "todos") {
-      q = query(q, where('status', '==', statusFilter));
-    }
-    
-    // Order by creation date descending
-    q = query(q, orderBy('dataCriacao', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const pedidosData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Pedido));
-      
-      // Client-side search filtering (Firestore doesn't support complex text search efficiently on its own for this case)
-      const filteredByName = searchTerm
-        ? pedidosData.filter(pedido =>
-            pedido.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            pedido.id.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        : pedidosData;
-
-      setPedidos(filteredByName);
+    const timer = setTimeout(() => {
+      setPedidos([]); // Simulate no data found or initial state
       setIsLoading(false);
-    }, (error) => {
-      console.error("Erro ao buscar pedidos: ", error);
-      toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [selectedDateRange, statusFilter, searchTerm, toast]);
+      console.log("PedidosPage: Simplified - Data fetching logic commented out for debugging.");
+    }, 500); // Short delay to show loading state
+    return () => clearTimeout(timer);
+  }, [selectedDateRange, statusFilter, searchTerm]);
+  // --- END TEMPORARY ---
 
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -265,7 +273,7 @@ export default function PedidosPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="h-64 text-center">
                     <Info className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Nenhum pedido encontrado para os filtros selecionados.</p>
+                    <p className="text-muted-foreground">Nenhum pedido encontrado para os filtros selecionados (ou a busca está temporariamente desabilitada para depuração).</p>
                   </TableCell>
                 </TableRow>
               )}

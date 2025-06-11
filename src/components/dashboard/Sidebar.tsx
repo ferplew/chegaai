@@ -74,7 +74,15 @@ export function DashboardSidebar() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Explicit check for context before destructuring
+  if (!sidebarContext) {
+    // This should ideally not happen if useSidebar's fallback is working,
+    // but acts as an additional safeguard.
+    console.warn("DashboardSidebar: sidebarContext is not available. Sidebar might not function correctly.");
+    return null; // Or render a minimal non-functional sidebar
+  }
   const { state, toggleSidebar, isMobile, setOpenMobile } = sidebarContext;
+
 
   const handleSignOut = async () => {
     try {
@@ -116,7 +124,7 @@ export function DashboardSidebar() {
   const sidebarContent = (
     <>
       <SidebarHeader className="p-2">
-        <div className="flex items-center justify-between"> {/* Changed justify-end to justify-between */}
+        <div className="flex items-center justify-between"> 
           <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2">
              <ChegaAiLogo className="h-8 text-primary" />
           </Link>

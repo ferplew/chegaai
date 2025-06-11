@@ -10,7 +10,17 @@ import { useSidebar } from '@/components/ui/sidebar';
 export function DashboardHeader() {
   const sidebarContext = useSidebar();
 
-  // useSidebar now guarantees a valid object, so no null check needed here.
+  // Explicit check for context before destructuring
+  if (!sidebarContext) {
+    // This should ideally not happen if useSidebar's fallback is working,
+    // but acts as an additional safeguard.
+    console.warn("DashboardHeader: sidebarContext is not available. Header might not function correctly.");
+    return ( // Render a fallback or null if context is critical
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 shadow-sm backdrop-blur-md md:px-6">
+        {/* Minimal header if context fails */}
+      </header>
+    );
+  }
   const { toggleSidebar, isMobile, state: sidebarState } = sidebarContext;
 
 
@@ -27,9 +37,7 @@ export function DashboardHeader() {
         </Link>
       )}
       
-      {/* Placeholder for potential future header content on desktop if needed, e.g., global search or quick actions */}
       <div className="ml-auto flex items-center gap-4">
-        {/* Elements removed as per request: User name, ThemeToggle, LogOut button are now in sidebar */}
       </div>
     </header>
   );
