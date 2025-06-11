@@ -22,7 +22,7 @@ import {
   type User
 } from 'firebase/auth';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { isValidCPF, isValidCNPJ } from "@/lib/utils";
+import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,6 +35,7 @@ export default function LoginPage() {
   const [restaurantName, setRestaurantName] = useState('');
   const [documentType, setDocumentType] = useState<'cpf' | 'cnpj'>('cpf');
   const [documentValue, setDocumentValue] = useState('');
+  const [documentError, setDocumentError] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -50,14 +51,40 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const clearRegistrationFields = () => {
+  const clearAllFields = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
     setRestaurantName('');
     setDocumentType('cpf');
     setDocumentValue('');
     setPhone('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
+    setDocumentError(null); 
+  };
+
+  const handleDocumentValueChange = (value: string) => {
+    setDocumentValue(value);
+    const cleanedValue = value.replace(/[^\d]/g, '');
+
+    if (documentType === 'cpf') {
+      if (cleanedValue.length === 11) {
+        setDocumentError(isValidCPF(cleanedValue) ? null : "CPF inválido.");
+      } else {
+        setDocumentError(null); 
+      }
+    } else if (documentType === 'cnpj') {
+      if (cleanedValue.length === 14) {
+        setDocumentError(isValidCNPJ(cleanedValue) ? null : "CNPJ inválido.");
+      } else {
+        setDocumentError(null);
+      }
+    }
+  };
+
+  const handleDocumentTypeChange = (type: 'cpf' | 'cnpj') => {
+    setDocumentType(type);
+    setDocumentValue('');
+    setDocumentError(null);
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -79,33 +106,43 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-      if (documentType === 'cpf' && !isValidCPF(documentValue)) {
-        toast({ title: "Erro de Cadastro", description: "CPF inválido.", variant: "destructive" });
+      // Check documentError state first for real-time validation feedback
+      if (documentError) {
+        toast({ title: "Erro de Cadastro", description: documentError, variant: "destructive" });
         setIsLoading(false);
         return;
       }
-      if (documentType === 'cnpj' && !isValidCNPJ(documentValue)) {
-        toast({ title: "Erro de Cadastro", description: "CNPJ inválido.", variant: "destructive" });
-        setIsLoading(false);
-        return;
+      // Then, perform final validation on submit
+      const cleanedDocumentValue = documentValue.replace(/[^\d]/g, '');
+      if (documentType === 'cpf') {
+        if (!isValidCPF(cleanedDocumentValue) || cleanedDocumentValue.length !== 11) {
+          toast({ title: "Erro de Cadastro", description: "CPF inválido.", variant: "destructive" });
+          setDocumentError("CPF inválido.");
+          setIsLoading(false);
+          return;
+        }
+      } else if (documentType === 'cnpj') {
+        if (!isValidCNPJ(cleanedDocumentValue) || cleanedDocumentValue.length !== 14) {
+          toast({ title: "Erro de Cadastro", description: "CNPJ inválido.", variant: "destructive" });
+          setDocumentError("CNPJ inválido.");
+          setIsLoading(false);
+          return;
+        }
       }
-      if (!phone.trim()) { // Simple validation for phone, can be improved
+      if (!phone.trim()) { 
         toast({ title: "Erro de Cadastro", description: "Telefone/WhatsApp é obrigatório.", variant: "destructive" });
         setIsLoading(false);
         return;
       }
 
       try {
-        // Here you would typically save restaurantName, documentType, documentValue, phone to your database (e.g., Firestore)
-        // associated with the user's UID after successful account creation.
-        // For this example, we are focusing on form validation and Firebase Auth user creation.
         await createUserWithEmailAndPassword(auth, email, password);
         toast({
           title: "Cadastro realizado!",
           description: "Você já pode fazer login.",
         });
         setAction('login'); 
-        clearRegistrationFields(); // Clear all fields after successful registration
+        clearAllFields(); 
       } catch (error: any) {
         let errorMessage = "Ocorreu um erro durante o cadastro.";
         if (error.code === 'auth/email-already-in-use') {
@@ -151,9 +188,6 @@ export default function LoginPage() {
         title: "Login com Google bem-sucedido!",
         description: "Redirecionando para o painel...",
       });
-      // For Google Sign-In, if it's their first time, you might redirect them
-      // to a form to complete profile details like restaurant name, document, phone.
-      // This example directly routes to dashboard.
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = "Ocorreu um erro ao tentar fazer login com o Google.";
@@ -245,7 +279,7 @@ export default function LoginPage() {
                     <Label>Tipo de Documento</Label>
                     <RadioGroup
                         value={documentType}
-                        onValueChange={(value: 'cpf' | 'cnpj') => setDocumentType(value)}
+                        onValueChange={handleDocumentTypeChange}
                         className="flex pt-1 space-x-4"
                     >
                         <div className="flex items-center space-x-2">
@@ -266,10 +300,16 @@ export default function LoginPage() {
                     type="text"
                     placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                     value={documentValue}
-                    onChange={(e) => setDocumentValue(e.target.value)}
+                    onChange={(e) => handleDocumentValueChange(e.target.value)}
                     required
-                    className="bg-input"
+                    className={cn(
+                      "bg-input",
+                      documentError && "border-destructive focus-visible:ring-destructive"
+                    )}
                   />
+                  {documentError && (
+                    <p className="text-sm text-destructive mt-1">{documentError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -315,9 +355,7 @@ export default function LoginPage() {
           <button
             onClick={() => {
               setAction(action === 'login' ? 'register' : 'login');
-              clearRegistrationFields(); // Clear form fields when switching action
-              // Keep email if switching from register to login and email was filled
-              // but for simplicity now, clearing all.
+              clearAllFields();
             }}
             className="text-muted-foreground hover:text-primary transition-colors"
           >
@@ -328,3 +366,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+    
