@@ -74,8 +74,7 @@ export function DashboardSidebar() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // useSidebar now guarantees a valid object, so no null check needed here.
-  const { state, toggleSidebar, isMobile } = sidebarContext;
+  const { state, toggleSidebar, isMobile, setOpenMobile } = sidebarContext;
 
   const handleSignOut = async () => {
     try {
@@ -88,15 +87,22 @@ export function DashboardSidebar() {
     }
   };
 
+  const handleNavItemClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   const renderNavItems = (items: typeof mainNavItems | typeof cadastrosNavItems | typeof settingsNavItems) => {
     return items.map((item) => (
       <SidebarMenuItem key={item.label}>
         <SidebarMenuButton
-          asChild // Permite que Link seja o filho direto e controle a navegação
+          asChild 
           isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
           tooltip={{ children: item.label, side: 'right', hidden: state === 'expanded' || isMobile }}
           className="justify-start"
           aria-label={item.label}
+          onClick={handleNavItemClick} 
         >
           <Link href={item.href}>
             <item.icon className="h-5 w-5" />
@@ -110,7 +116,10 @@ export function DashboardSidebar() {
   const sidebarContent = (
     <>
       <SidebarHeader className="p-2">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between"> {/* Changed justify-end to justify-between */}
+          <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2">
+             <ChegaAiLogo className="h-8 text-primary" />
+          </Link>
           {!isMobile && ( 
             <Button
               variant="ghost"
