@@ -1,3 +1,4 @@
+
 import type { SVGProps } from 'react';
 
 export function ChegaAiLogo(props: SVGProps<SVGSVGElement>) {
@@ -10,11 +11,12 @@ export function ChegaAiLogo(props: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <text
-        x="10"
+        x="100"
         y="35"
         fontFamily="'Space Grotesk', sans-serif"
         fontSize="30"
         fontWeight="bold"
+        textAnchor="middle"
         className="fill-primary group-hover:fill-primary-foreground transition-colors duration-300"
       >
         Chega
