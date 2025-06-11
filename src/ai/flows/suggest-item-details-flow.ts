@@ -62,25 +62,36 @@ const suggestItemDetailsFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      const { output } = await prompt(input);
+      const { output } = await prompt(input); // Genkit's prompt() handles schema validation.
+                                            // If output doesn't match schema, output can be null.
+
       if (!output) {
-        console.warn("AI title/description suggestion returned null/undefined output for keywords:", input.keywords);
+        console.warn("[SUGGESTION FLOW] AI suggestion prompt returned null/undefined output for keywords:", input.keywords, "Raw output:", output);
         return {
-          suggestedTitles: [`Item de ${input.keywords}`],
-          suggestedDescriptions: [`Descrição para ${input.keywords}.`]
+          suggestedTitles: [`Falha ao obter títulos para "${input.keywords}" (saída nula)`],
+          suggestedDescriptions: [`Falha ao obter descrições para "${input.keywords}" (saída nula)`],
         };
       }
+      
+      // Ensure arrays are always returned, even if the AI omits them (though schema makes them optional)
       return {
         suggestedTitles: output.suggestedTitles || [],
         suggestedDescriptions: output.suggestedDescriptions || [],
       };
-    } catch (error) {
-      console.error("Error in suggestItemDetailsFlow for keywords:", input.keywords, error);
-       return {
-          suggestedTitles: [`Erro ao sugerir títulos para ${input.keywords}`],
-          suggestedDescriptions: [`Erro ao sugerir descrições para ${input.keywords}`]
-        };
+
+    } catch (error: any) {
+      let errorMessage = 'Erro desconhecido ao processar sugestões.';
+      if (error && error.message) {
+        errorMessage = error.message;
+      }
+      // Log the error server-side for debugging
+      console.error("[SUGGESTION FLOW] Error in suggestItemDetailsFlow for keywords:", input.keywords, "Error:", errorMessage, "Full Error Object:", error);
+      
+      // Return a structured error response that still matches the output schema
+      return {
+        suggestedTitles: [`Erro ao sugerir títulos: ${errorMessage.substring(0,50)}...`],
+        suggestedDescriptions: [`Erro ao sugerir descrições: ${errorMessage.substring(0,50)}...`],
+      };
     }
   }
 );
-
