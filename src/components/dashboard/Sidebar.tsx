@@ -22,7 +22,7 @@ import {
   LogOut,
   PanelLeft
 } from 'lucide-react';
-import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
+// ChegaAiLogo import removed as it's no longer used in the header
 import {
   Sidebar as ShadSidebar,
   SidebarHeader,
@@ -41,6 +41,8 @@ import { auth } from '@/lib/firebase/config'; // For sign out
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
+
 
 const mainNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -83,7 +85,7 @@ export function DashboardSidebar() {
     }
   };
 
-  const renderNavItems = (items: typeof mainNavItems) => {
+  const renderNavItems = (items: typeof mainNavItems | typeof cadastrosNavItems | typeof settingsNavItems) => {
     return items.map((item) => (
       <SidebarMenuItem key={item.label}>
         <Link href={item.href} passHref legacyBehavior={false}>
@@ -94,7 +96,7 @@ export function DashboardSidebar() {
             aria-label={item.label}
           >
             <item.icon className="h-5 w-5" />
-            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+            <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
           </SidebarMenuButton>
         </Link>
       </SidebarMenuItem>
@@ -104,21 +106,28 @@ export function DashboardSidebar() {
   const sidebarContent = (
     <>
       <SidebarHeader className="p-4">
-        <div className="flex items-center justify-between">
-          <Link href="/dashboard">
-            <ChegaAiLogo className="h-8 text-primary data-[collapsed=true]:hidden" />
-          </Link>
-          {!isMobile && (
+        <div className="flex items-center justify-end h-8"> {/* Adjusted height to match logo and ensure button aligns */}
+          {/* Logo removed from here */}
+          {!isMobile && ( // This button is for desktop icon mode toggle
             <Button
               variant="ghost"
               size="icon"
-              className="data-[collapsed=false]:hidden"
+              className="group-data-[state=expanded]:hidden" // Show only when sidebar is collapsed (icon mode)
               onClick={toggleSidebar}
               aria-label="Expandir menu"
             >
               <PanelLeft />
             </Button>
           )}
+           {/* Fallback for expanded state, typically logo would be here. If header should be empty when expanded, this can be removed or styled. */}
+           {/* For now, an empty div to maintain structure if needed, or it can be removed if justify-end handles it. */}
+           <div className="group-data-[state=collapsed]:hidden">
+             {/* Placeholder for when sidebar is expanded, if needed. Example: A logo could go here. */}
+             {/* If you want the logo back when expanded, but not when collapsed: */}
+              <Link href="/dashboard" className="group-data-[state=collapsed]:hidden">
+                 <ChegaAiLogo className="h-8 text-primary" />
+              </Link>
+           </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
@@ -127,9 +136,9 @@ export function DashboardSidebar() {
         </SidebarMenu>
 
         <SidebarGroup className="p-0 mt-2">
-          <SidebarGroupLabel className="px-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center">
-            <Archive className="h-5 w-5 group-data-[collapsible=icon]:mr-0 mr-2"/>
-             <span className="group-data-[collapsible=icon]:hidden">Cadastros</span>
+          <SidebarGroupLabel className="px-2 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:justify-center">
+            <Archive className="h-5 w-5 group-data-[state=collapsed]:mr-0 mr-2"/>
+             <span className="group-data-[state=collapsed]:hidden">Cadastros</span>
           </SidebarGroupLabel>
           <SidebarMenu>
             {renderNavItems(cadastrosNavItems)}
@@ -149,11 +158,11 @@ export function DashboardSidebar() {
             <SidebarMenuButton onClick={handleSignOut} className="justify-start w-full" 
               tooltip={{ children: "Sair", side: 'right', hidden: state === 'expanded' || isMobile }}>
               <LogOut className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">Sair</span>
+              <span className="group-data-[state=collapsed]:hidden">Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <p className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden text-center mt-2">
+        <p className="text-xs text-muted-foreground group-data-[state=collapsed]:hidden text-center mt-2">
           &copy; {new Date().getFullYear()} Chega Aí
         </p>
       </SidebarFooter>
