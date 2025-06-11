@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, PlusCircle, Search, Info, Loader2 } from "lucide-react"; 
+import { Filter, PlusCircle, Search, Info, Loader2 } from "lucide-react";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,17 +22,16 @@ import {
   endOfMonth,
   differenceInDays,
   format,
-  parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { db } from '@/lib/firebase/config';
-import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query } from 'firebase/firestore';
+import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query, type DocumentData } from 'firebase/firestore';
 
 interface Pedido {
   id: string;
   nomeCliente: string;
-  itensPedido: string; 
+  itensPedido: string;
   valorTotal: number;
   status: 'Novo' | 'Em preparo' | 'Pronto' | 'Finalizado' | 'Cancelado';
   dataCriacao: Timestamp;
@@ -51,69 +50,62 @@ function getStatusBadgeClass(status: string): string {
 
 export default function PedidosPage() {
   const [pedidos, setPedidos] = React.useState<Pedido[]>([]);
-  const [isLoading, setIsLoading] React.useState(true);
-  const [searchTerm, setSearchTerm] React.useState("");
-  const [statusFilter, setStatusFilter] React.useState<string>("todos");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState<string>("todos"); // 'todos' ou um status específico
 
   const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
-    from: startOfDay(new Date()), 
+    from: startOfDay(new Date()),
     to: endOfDay(new Date()),
   });
   const { toast } = useToast();
   const MAX_DATE_RANGE_DAYS = 90;
 
-  // React.useEffect(() => {
-  //   setIsLoading(true);
-  //   let q: Query = collection(db, 'pedidos');
-
-  //   if (selectedDateRange?.from) {
-  //     q = query(q, where('dataCriacao', '>=', Timestamp.fromDate(startOfDay(selectedDateRange.from))));
-  //   }
-  //   if (selectedDateRange?.to) {
-  //     q = query(q, where('dataCriacao', '<=', Timestamp.fromDate(endOfDay(selectedDateRange.to))));
-  //   }
-
-  //   if (statusFilter !== "todos") {
-  //     q = query(q, where('status', '==', statusFilter));
-  //   }
-    
-  //   q = query(q, orderBy('dataCriacao', 'desc'));
-
-  //   const unsubscribe = onSnapshot(q, (querySnapshot) => {
-  //     const pedidosData = querySnapshot.docs.map(doc => ({
-  //       id: doc.id,
-  //       ...doc.data()
-  //     } as Pedido));
-      
-  //     const filteredByName = searchTerm
-  //       ? pedidosData.filter(pedido =>
-  //           pedido.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //           pedido.id.toLowerCase().includes(searchTerm.toLowerCase())
-  //         )
-  //       : pedidosData;
-
-  //     setPedidos(filteredByName);
-  //     setIsLoading(false);
-  //   }, (error) => {
-  //     console.error("Erro ao buscar pedidos: ", error);
-  //     toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
-  //     setIsLoading(false);
-  //   });
-
-  //   return () => unsubscribe();
-  // }, [selectedDateRange, statusFilter, searchTerm, toast]);
-
-  // --- TEMPORARY: Simulate loading and then no data for debugging ---
   React.useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setPedidos([]); // Simulate no data found or initial state
+    let firestoreQuery: Query<DocumentData> = collection(db, 'pedidos');
+
+    // Aplicar filtro de data
+    if (selectedDateRange?.from) {
+      firestoreQuery = query(firestoreQuery, where('dataCriacao', '>=', Timestamp.fromDate(startOfDay(selectedDateRange.from))));
+    }
+    if (selectedDateRange?.to) {
+      // Para 'menor ou igual a', precisamos do final do dia.
+      firestoreQuery = query(firestoreQuery, where('dataCriacao', '<=', Timestamp.fromDate(endOfDay(selectedDateRange.to))));
+    }
+
+    // Aplicar filtro de status
+    if (statusFilter !== "todos") {
+      firestoreQuery = query(firestoreQuery, where('status', '==', statusFilter));
+    }
+    
+    // Ordenar por data de criação (mais recentes primeiro)
+    firestoreQuery = query(firestoreQuery, orderBy('dataCriacao', 'desc'));
+
+    const unsubscribe = onSnapshot(firestoreQuery, (querySnapshot) => {
+      const pedidosData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Pedido));
+      
+      // Aplicar filtro de busca por nome do cliente ou ID do pedido (client-side após a query)
+      const filteredByNameOrId = searchTerm
+        ? pedidosData.filter(pedido =>
+            pedido.nomeCliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            pedido.id.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : pedidosData;
+
+      setPedidos(filteredByNameOrId);
       setIsLoading(false);
-      console.log("PedidosPage: Simplified - Data fetching logic commented out for debugging.");
-    }, 500); // Short delay to show loading state
-    return () => clearTimeout(timer);
-  }, [selectedDateRange, statusFilter, searchTerm]);
-  // --- END TEMPORARY ---
+    }, (error) => {
+      console.error("Erro ao buscar pedidos: ", error);
+      toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [selectedDateRange, statusFilter, searchTerm, toast]);
 
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -124,6 +116,8 @@ export default function PedidosPage() {
           description: `Por favor, selecione um intervalo de no máximo ${MAX_DATE_RANGE_DAYS} dias.`,
           variant: "destructive",
         });
+        // Optionally, revert to a valid range or clear it
+        return; 
       }
     }
     setSelectedDateRange(range);
@@ -158,6 +152,7 @@ export default function PedidosPage() {
 
   const formatDateFromTimestamp = (timestamp: Timestamp | undefined): string => {
     if (!timestamp) return 'N/A';
+    // Formatando para Hora:Minuto
     return format(timestamp.toDate(), "HH:mm", { locale: ptBR });
   };
 
@@ -273,7 +268,7 @@ export default function PedidosPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="h-64 text-center">
                     <Info className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Nenhum pedido encontrado para os filtros selecionados (ou a busca está temporariamente desabilitada para depuração).</p>
+                    <p className="text-muted-foreground">Nenhum pedido encontrado para os filtros selecionados.</p>
                   </TableCell>
                 </TableRow>
               )}
