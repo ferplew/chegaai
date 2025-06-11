@@ -69,7 +69,6 @@ const generateItemImageFlow = ai.defineFlow(
       if (error && error.message) {
         errorMessage = error.message;
       }
-      // Attempt to get more specific error details if available from Genkit/Gemini
       if (error && error.cause && error.cause.message) {
         errorMessage += ` Details: ${error.cause.message}`;
       } else if (error && error.details) {

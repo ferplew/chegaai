@@ -4,7 +4,7 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image'; 
+import Image from 'next/image'; // For image preview
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
-// import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow'; // Image AI removed for now
+import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
 // import { db } from '@/lib/firebase/config'; // Para o próximo passo
 // import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Para o próximo passo
 
 interface Adicional {
-  id: string; 
+  id: string; // for unique key in map
   nome: string;
   valor: number | '';
 }
@@ -52,7 +52,11 @@ export default function NovoItemPage() {
   const [selectedAiTitle, setSelectedAiTitle] = useState<string | null>(null);
   const [selectedAiDescription, setSelectedAiDescription] = useState<string | null>(null);
 
-  // Placeholder para categorias 
+  // AI Image Generation
+  const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
+  const [isLoadingAiImage, setIsLoadingAiImage] = useState(false);
+
+  // Placeholder para categorias - será carregado do Firestore depois
   const categoriasMock = [
     { id: 'pizzas', nome: 'Pizzas' },
     { id: 'burgers', nome: 'Hambúrgueres' },
@@ -63,19 +67,20 @@ export default function NovoItemPage() {
   ];
 
   useEffect(() => {
-    if (imagemArquivo) {
+    if (aiGeneratedImage) {
+      setImagemPreview(aiGeneratedImage);
+    } else if (imagemArquivo) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagemPreview(reader.result as string);
       };
       reader.readAsDataURL(imagemArquivo);
-      setImagemUrl(''); 
     } else if (imagemUrl) {
       setImagemPreview(imagemUrl);
     } else {
       setImagemPreview(null);
     }
-  }, [imagemUrl, imagemArquivo]);
+  }, [imagemUrl, imagemArquivo, aiGeneratedImage]);
 
 
   const handleSuggestDetails = async () => {
@@ -110,6 +115,31 @@ export default function NovoItemPage() {
     setDescricao(description);
     setSelectedAiDescription(description);
   };
+
+  const handleGenerateImage = async () => {
+    if (!nome.trim()) {
+      toast({ title: "Nome do item vazio", description: "Digite um nome para o item antes de gerar a imagem.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingAiImage(true);
+    setAiGeneratedImage(null);
+    setImagemArquivo(null);
+    setImagemUrl('');
+    try {
+      const result = await generateItemImage({ title: nome });
+      if (result.imageDataUri) {
+        setAiGeneratedImage(result.imageDataUri);
+        toast({ title: "Imagem Gerada!", description: "A IA criou uma imagem para seu item." });
+      } else {
+         toast({ title: "Erro da IA", description: "A IA não retornou uma imagem.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Erro ao gerar imagem:", error);
+      toast({ title: "Erro da IA", description: "Não foi possível gerar a imagem. Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsLoadingAiImage(false);
+    }
+  };
   
   const handleAddAdicional = () => {
     if (!novoAdicionalNome.trim()) {
@@ -132,17 +162,21 @@ export default function NovoItemPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // setIsLoading(true); // Re-enable when Firestore save is active
 
     if (!nome.trim()) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe o nome do item.", variant: "destructive" });
+      // setIsLoading(false);
       return;
     }
     if (valor === '' || Number(valor) <= 0) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe um valor válido para o item.", variant: "destructive" });
+      // setIsLoading(false);
       return;
     }
     if (!categoria) {
         toast({ title: "Campo obrigatório", description: "Por favor, selecione uma categoria.", variant: "destructive" });
+        // setIsLoading(false);
         return;
     }
 
@@ -152,8 +186,9 @@ export default function NovoItemPage() {
       valor: Number(valor),
       categoria,
       adicionais: adicionais.map(({id, ...rest}) => rest), 
-      imagemUrl: imagemUrl.trim(), 
+      imagemUrl: aiGeneratedImage || imagemUrl.trim(), 
       imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null,
+      foiGeradoPorIA: !!aiGeneratedImage,
     };
 
     console.log("Dados do Item para Salvar:", itemData);
@@ -164,6 +199,7 @@ export default function NovoItemPage() {
     });
     
     // router.push('/dashboard/produtos'); 
+    // setIsLoading(false); // Re-enable
   };
 
   return (
@@ -183,6 +219,7 @@ export default function NovoItemPage() {
         </div>
       </div>
 
+      {/* AI Suggestions Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA</CardTitle>
@@ -361,7 +398,7 @@ export default function NovoItemPage() {
                                 type="url"
                                 placeholder="https://exemplo.com/imagem.png"
                                 value={imagemUrl}
-                                onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); }}
+                                onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); setAiGeneratedImage(null); }}
                             />
                         </div>
                          <div className="text-center text-sm text-muted-foreground my-2">OU</div>
@@ -380,12 +417,19 @@ export default function NovoItemPage() {
                                       } else {
                                         setImagemArquivo(file);
                                         setImagemUrl('');
+                                        setAiGeneratedImage(null);
                                       }
                                     }
                                 }}
                                 className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                             />
                         </div>
+                        <div className="text-center text-sm text-muted-foreground my-2">OU</div>
+                         <Button type="button" onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim()} className="w-full">
+                            {isLoadingAiImage ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                            Gerar Imagem com IA (usando nome do item)
+                        </Button>
+                        {isLoadingAiImage && <p className="text-xs text-muted-foreground text-center">A IA está criando, pode levar alguns segundos...</p>}
                     </div>
                     
                     <div className="space-y-2">
@@ -395,11 +439,14 @@ export default function NovoItemPage() {
                                 <Image src={imagemPreview} alt="Pré-visualização" width={200} height={192} className="object-contain max-h-full max-w-full" data-ai-hint="food item" />
                             ) : (
                                 <div className="text-center text-muted-foreground p-4">
-                                    <UploadCloud className="mx-auto h-12 w-12 mb-2" />
-                                    <p className="text-xs">Nenhuma imagem selecionada ou URL fornecida.</p>
+                                    <ImageIcon className="mx-auto h-12 w-12 mb-2" />
+                                    <p className="text-xs">Nenhuma imagem selecionada, fornecida ou gerada.</p>
                                 </div>
                             )}
                         </div>
+                        {aiGeneratedImage && imagemPreview === aiGeneratedImage && (
+                             <p className="text-xs text-primary text-center flex items-center justify-center gap-1"><Info className="h-3 w-3"/> Imagem gerada pela IA. Você pode substituí-la.</p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -421,4 +468,3 @@ export default function NovoItemPage() {
     </div>
   );
 }
-
