@@ -4,22 +4,24 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image'; // For image preview
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle } from "lucide-react";
+import { ArrowLeft, Loader2, DollarSign, ImageIcon, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
 import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
-// import { db } from '@/lib/firebase/config'; // Para o próximo passo
-// import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Para o próximo passo
+
+import { db, storage } from '@/lib/firebase/config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref as storageRef, uploadString, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface Adicional {
-  id: string; // for unique key in map
+  id: string; 
   nome: string;
   valor: number | '';
 }
@@ -28,23 +30,19 @@ export default function NovoItemPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Main form fields
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState<number | ''>('');
   const [categoria, setCategoria] = useState('');
   
-  // Adicionais
   const [adicionais, setAdicionais] = useState<Adicional[]>([]);
   const [novoAdicionalNome, setNovoAdicionalNome] = useState('');
   const [novoAdicionalValor, setNovoAdicionalValor] = useState<number | ''>('');
 
-  // Image handling
   const [imagemUrl, setImagemUrl] = useState('');
   const [imagemArquivo, setImagemArquivo] = useState<File | null>(null);
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
 
-  // AI Text Suggestions
   const [aiKeywords, setAiKeywords] = useState('');
   const [aiSuggestedTitles, setAiSuggestedTitles] = useState<string[] | null>(null);
   const [aiSuggestedDescriptions, setAiSuggestedDescriptions] = useState<string[] | null>(null);
@@ -52,11 +50,12 @@ export default function NovoItemPage() {
   const [selectedAiTitle, setSelectedAiTitle] = useState<string | null>(null);
   const [selectedAiDescription, setSelectedAiDescription] = useState<string | null>(null);
 
-  // AI Image Generation
   const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
   const [isLoadingAiImage, setIsLoadingAiImage] = useState(false);
+  
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Placeholder para categorias - será carregado do Firestore depois
+
   const categoriasMock = [
     { id: 'pizzas', nome: 'Pizzas' },
     { id: 'burgers', nome: 'Hambúrgueres' },
@@ -122,7 +121,7 @@ export default function NovoItemPage() {
       return;
     }
     setIsLoadingAiImage(true);
-    setAiGeneratedImage(null);
+    setAiGeneratedImage(null); 
     setImagemArquivo(null);
     setImagemUrl('');
     try {
@@ -159,47 +158,122 @@ export default function NovoItemPage() {
     setAdicionais(adicionais.filter(adicional => adicional.id !== idToRemove));
   };
 
+  const resetForm = () => {
+    setNome('');
+    setDescricao('');
+    setValor('');
+    setCategoria('');
+    setAdicionais([]);
+    setNovoAdicionalNome('');
+    setNovoAdicionalValor('');
+    setImagemUrl('');
+    setImagemArquivo(null);
+    setImagemPreview(null);
+    setAiKeywords('');
+    setAiSuggestedTitles(null);
+    setAiSuggestedDescriptions(null);
+    setSelectedAiTitle(null);
+    setSelectedAiDescription(null);
+    setAiGeneratedImage(null);
+  };
+
+  const getFinalImageUrl = async (): Promise<string | null> => {
+    const imageNamePrefix = nome.trim().toLowerCase().replace(/\s+/g, '_') || 'item';
+    
+    if (aiGeneratedImage) { // AI-generated image (data URI)
+      try {
+        const imageRef = storageRef(storage, `produtos/${imageNamePrefix}_ai_${Date.now()}.png`);
+        const uploadResult = await uploadString(imageRef, aiGeneratedImage, 'data_url');
+        return await getDownloadURL(uploadResult.ref);
+      } catch (error) {
+        console.error("Erro ao fazer upload da imagem gerada por IA:", error);
+        toast({ title: "Erro no Upload", description: "Falha ao salvar imagem da IA.", variant: "destructive" });
+        return null;
+      }
+    } else if (imagemArquivo) { // User uploaded file
+      try {
+        const imageRef = storageRef(storage, `produtos/${imageNamePrefix}_file_${Date.now()}_${imagemArquivo.name}`);
+        const uploadTask = uploadBytesResumable(imageRef, imagemArquivo);
+        
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed',
+            (snapshot) => { /* Progress can be handled here if needed */ },
+            (error) => {
+              console.error("Erro ao fazer upload do arquivo de imagem:", error);
+              toast({ title: "Erro no Upload", description: "Falha ao salvar imagem carregada.", variant: "destructive" });
+              reject(null);
+            },
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(downloadURL);
+            }
+          );
+        });
+      } catch (error) { // Should be caught by uploadTask.on error handler
+        console.error("Exceção no upload do arquivo de imagem:", error);
+        toast({ title: "Erro no Upload", description: "Exceção ao salvar imagem carregada.", variant: "destructive" });
+        return null;
+      }
+    } else if (imagemUrl.trim()) { // Manual URL
+      return imagemUrl.trim();
+    }
+    return null; // No image
+  };
+
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // setIsLoading(true); // Re-enable when Firestore save is active
+    setIsSaving(true);
 
     if (!nome.trim()) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe o nome do item.", variant: "destructive" });
-      // setIsLoading(false);
-      return;
+      setIsSaving(false); return;
     }
     if (valor === '' || Number(valor) <= 0) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe um valor válido para o item.", variant: "destructive" });
-      // setIsLoading(false);
-      return;
+      setIsSaving(false); return;
     }
     if (!categoria) {
         toast({ title: "Campo obrigatório", description: "Por favor, selecione uma categoria.", variant: "destructive" });
-        // setIsLoading(false);
-        return;
+        setIsSaving(false); return;
     }
 
-    const itemData = {
-      nome: nome.trim(),
-      descricao: descricao.trim(),
-      valor: Number(valor),
-      categoria,
-      adicionais: adicionais.map(({id, ...rest}) => rest), 
-      imagemUrl: aiGeneratedImage || imagemUrl.trim(), 
-      imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null,
-      foiGeradoPorIA: !!aiGeneratedImage,
-    };
+    try {
+      const imagemFinalUrl = await getFinalImageUrl();
 
-    console.log("Dados do Item para Salvar:", itemData);
+      const itemDataParaSalvar = {
+        nome: nome.trim(),
+        descricao: descricao.trim(),
+        valor: Number(valor),
+        categoria,
+        adicionais: adicionais.map(({ id, ...rest }) => rest), // Remove o 'id' temporário do cliente
+        imagemUrl: imagemFinalUrl, // URL final da imagem (do Storage ou manual)
+        foiGeradoPorIA: !!aiGeneratedImage && imagemFinalUrl?.includes('_ai_'), // Check if the final URL is from AI
+        dataCriacao: serverTimestamp(),
+        ativo: true, // Default to active
+      };
 
-    toast({
-      title: "Item Configurado (Simulação)",
-      description: "Os dados do item foram preparados. Verifique o console. Integração com Firestore no próximo passo.",
-    });
-    
-    // router.push('/dashboard/produtos'); 
-    // setIsLoading(false); // Re-enable
+      const produtosCollectionRef = collection(db, 'produtos');
+      await addDoc(produtosCollectionRef, itemDataParaSalvar);
+
+      toast({
+        title: "Item Salvo!",
+        description: `O item "${itemDataParaSalvar.nome}" foi cadastrado com sucesso.`,
+      });
+      
+      resetForm();
+      router.push('/dashboard/produtos'); 
+
+    } catch (error) {
+      console.error("Erro ao salvar item: ", error);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar o item. Verifique o console para detalhes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -219,7 +293,6 @@ export default function NovoItemPage() {
         </div>
       </div>
 
-      {/* AI Suggestions Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA</CardTitle>
@@ -235,8 +308,9 @@ export default function NovoItemPage() {
               value={aiKeywords}
               onChange={(e) => setAiKeywords(e.target.value)}
               className="flex-grow"
+              disabled={isLoadingAiSuggestions || isSaving}
             />
-            <Button onClick={handleSuggestDetails} disabled={isLoadingAiSuggestions} className="w-full sm:w-auto">
+            <Button onClick={handleSuggestDetails} disabled={isLoadingAiSuggestions || isSaving || !aiKeywords.trim()} className="w-full sm:w-auto">
               {isLoadingAiSuggestions ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
               Sugerir com IA
             </Button>
@@ -253,6 +327,7 @@ export default function NovoItemPage() {
                     size="sm"
                     onClick={() => handleApplyAiTitle(title)}
                     className="text-left justify-start h-auto py-2 leading-snug"
+                    disabled={isSaving}
                   >
                     {selectedAiTitle === title && <CheckCircle className="h-4 w-4 mr-2 text-primary-foreground group-hover:text-primary-foreground" />}
                     {title}
@@ -271,6 +346,7 @@ export default function NovoItemPage() {
                       variant={selectedAiDescription === desc ? "secondary" : "outline"}
                       onClick={() => handleApplyAiDescription(desc)}
                       className="w-full text-left justify-start h-auto py-2 mb-1 whitespace-normal leading-snug text-sm hover:bg-accent/50"
+                      disabled={isSaving}
                     >
                     <div className="flex items-start w-full">
                       {selectedAiDescription === desc && <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-secondary-foreground" />}
@@ -303,6 +379,7 @@ export default function NovoItemPage() {
                   if(selectedAiTitle) setSelectedAiTitle(null); 
                 }}
                 required
+                disabled={isSaving}
               />
             </div>
 
@@ -317,6 +394,7 @@ export default function NovoItemPage() {
                   if(selectedAiDescription) setSelectedAiDescription(null);
                 }}
                 rows={3}
+                disabled={isSaving}
               />
             </div>
             
@@ -335,12 +413,13 @@ export default function NovoItemPage() {
                             step="0.01"
                             required
                             className="pl-8"
+                            disabled={isSaving}
                         />
                     </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="categoria">Categoria <span className="text-destructive">*</span></Label>
-                    <Select value={categoria} onValueChange={setCategoria} name="categoria" required>
+                    <Select value={categoria} onValueChange={setCategoria} name="categoria" required disabled={isSaving}>
                         <SelectTrigger id="categoria">
                             <SelectValue placeholder="Selecione uma categoria..." />
                         </SelectTrigger>
@@ -365,7 +444,7 @@ export default function NovoItemPage() {
                 {adicionais.map((adicional) => (
                   <div key={adicional.id} className="flex items-center gap-2 p-2 border rounded-md bg-muted/20">
                     <span className="flex-grow text-sm">{adicional.nome} - R$ {Number(adicional.valor).toFixed(2)}</span>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveAdicional(adicional.id)} className="text-destructive hover:text-destructive">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveAdicional(adicional.id)} className="text-destructive hover:text-destructive" disabled={isSaving}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -374,13 +453,13 @@ export default function NovoItemPage() {
               <div className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-grow space-y-1">
                   <Label htmlFor="novoAdicionalNome" className="text-xs">Nome do Adicional</Label>
-                  <Input id="novoAdicionalNome" value={novoAdicionalNome} onChange={(e) => setNovoAdicionalNome(e.target.value)} placeholder="Ex: Cheddar Extra"/>
+                  <Input id="novoAdicionalNome" value={novoAdicionalNome} onChange={(e) => setNovoAdicionalNome(e.target.value)} placeholder="Ex: Cheddar Extra" disabled={isSaving}/>
                 </div>
                 <div className="w-full sm:w-32 space-y-1">
                   <Label htmlFor="novoAdicionalValor" className="text-xs">Valor (R$)</Label>
-                  <Input id="novoAdicionalValor" type="number" value={novoAdicionalValor} onChange={(e) => setNovoAdicionalValor(e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="Ex: 3.50" min="0" step="0.01" />
+                  <Input id="novoAdicionalValor" type="number" value={novoAdicionalValor} onChange={(e) => setNovoAdicionalValor(e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="Ex: 3.50" min="0" step="0.01" disabled={isSaving}/>
                 </div>
-                <Button type="button" variant="outline" onClick={handleAddAdicional} className="w-full sm:w-auto">Adicionar</Button>
+                <Button type="button" variant="outline" onClick={handleAddAdicional} className="w-full sm:w-auto" disabled={isSaving}>Adicionar</Button>
               </div>
             </div>
 
@@ -399,6 +478,7 @@ export default function NovoItemPage() {
                                 placeholder="https://exemplo.com/imagem.png"
                                 value={imagemUrl}
                                 onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); setAiGeneratedImage(null); }}
+                                disabled={isSaving || isLoadingAiImage}
                             />
                         </div>
                          <div className="text-center text-sm text-muted-foreground my-2">OU</div>
@@ -422,12 +502,13 @@ export default function NovoItemPage() {
                                     }
                                 }}
                                 className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                disabled={isSaving || isLoadingAiImage}
                             />
                         </div>
                         <div className="text-center text-sm text-muted-foreground my-2">OU</div>
-                         <Button type="button" onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim()} className="w-full">
+                         <Button type="button" onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim() || isSaving} className="w-full">
                             {isLoadingAiImage ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                            Gerar Imagem com IA (usando nome do item)
+                            Gerar Imagem com IA
                         </Button>
                         {isLoadingAiImage && <p className="text-xs text-muted-foreground text-center">A IA está criando, pode levar alguns segundos...</p>}
                     </div>
@@ -450,16 +531,15 @@ export default function NovoItemPage() {
                     </div>
                 </div>
             </div>
-
-
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
             <div className="flex justify-end gap-2 w-full">
-                <Button variant="outline" asChild type="button">
+                <Button variant="outline" asChild type="button" disabled={isSaving}>
                     <Link href="/dashboard/produtos">Cancelar</Link>
                 </Button>
-                <Button type="submit">
-                    Salvar Item (Simulação)
+                <Button type="submit" disabled={isSaving || isLoadingAiImage || isLoadingAiSuggestions}>
+                    {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    {isSaving ? "Salvando Item..." : "Salvar Item"}
                 </Button>
             </div>
           </CardFooter>
@@ -468,3 +548,4 @@ export default function NovoItemPage() {
     </div>
   );
 }
+
