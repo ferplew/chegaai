@@ -105,29 +105,19 @@ export function DashboardSidebar() {
 
   const sidebarContent = (
     <>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center justify-end h-8"> {/* Adjusted height to match logo and ensure button aligns */}
-          {/* Logo removed from here */}
-          {!isMobile && ( // This button is for desktop icon mode toggle
+      <SidebarHeader className="p-2">
+        <div className="flex items-center justify-end">
+          {!isMobile && ( 
             <Button
               variant="ghost"
               size="icon"
-              className="group-data-[state=expanded]:hidden" // Show only when sidebar is collapsed (icon mode)
+              className="h-7 w-7" 
               onClick={toggleSidebar}
-              aria-label="Expandir menu"
+              aria-label="Alternar menu"
             >
-              <PanelLeft />
+              <PanelLeft className="h-5 w-5"/>
             </Button>
           )}
-           {/* Fallback for expanded state, typically logo would be here. If header should be empty when expanded, this can be removed or styled. */}
-           {/* For now, an empty div to maintain structure if needed, or it can be removed if justify-end handles it. */}
-           <div className="group-data-[state=collapsed]:hidden">
-             {/* Placeholder for when sidebar is expanded, if needed. Example: A logo could go here. */}
-             {/* If you want the logo back when expanded, but not when collapsed: */}
-              <Link href="/dashboard" className="group-data-[state=collapsed]:hidden">
-                 <ChegaAiLogo className="h-8 text-primary" />
-              </Link>
-           </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
