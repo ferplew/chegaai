@@ -73,11 +73,11 @@ export default function NovoItemPage() {
         setImagemPreview(reader.result as string);
       };
       reader.readAsDataURL(imagemArquivo);
-      setImagemUrl(''); // Clear URL if file is selected
-      setAiGeneratedImage(null); // Clear AI image if file is selected
+      setImagemUrl(''); 
+      setAiGeneratedImage(null); 
     } else if (imagemUrl) {
       setImagemPreview(imagemUrl);
-      setAiGeneratedImage(null); // Clear AI image if URL is typed
+      setAiGeneratedImage(null); 
     } else if (aiGeneratedImage) {
       setImagemPreview(aiGeneratedImage);
     } else {
@@ -130,7 +130,7 @@ export default function NovoItemPage() {
       const result = await generateItemImage({ title: nome });
       if (result.imageDataUri) {
         setAiGeneratedImage(result.imageDataUri);
-        setImagemPreview(result.imageDataUri);
+        setImagemPreview(result.imageDataUri); // This will trigger useEffect
         toast({ title: "Imagem Gerada!", description: "A IA criou uma imagem para seu item." });
       } else {
          toast({ title: "Erro da IA", description: "A IA não retornou uma imagem.", variant: "destructive" });
@@ -187,11 +187,10 @@ export default function NovoItemPage() {
       descricao: descricao.trim(),
       valor: Number(valor),
       categoria,
-      adicionais: adicionais.map(({id, ...rest}) => rest), // Remove temporary id
-      imagemUrl: imagemUrl.trim(), // Could be URL from input, or from Storage if file uploaded, or AI data URI
-      imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null, // Keep track of original file name if uploaded
-      aiGeneratedImagePresent: !!aiGeneratedImage, // Flag if AI image was used (data URI would be in imagemUrl if so)
-      // dataCriacao: serverTimestamp(), // Firestore
+      adicionais: adicionais.map(({id, ...rest}) => rest), 
+      imagemUrl: aiGeneratedImage || imagemUrl.trim(), // Prioritize AI image, then URL, then null (file needs upload step)
+      imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null,
+      foiGeradoPorIA: !!aiGeneratedImage,
     };
 
     console.log("Dados do Item para Salvar:", itemData);
@@ -318,7 +317,10 @@ export default function NovoItemPage() {
                 id="nome"
                 placeholder="Ex: Pizza Margherita Grande"
                 value={nome}
-                onChange={(e) => setNome(e.target.value)}
+                onChange={(e) => {
+                  setNome(e.target.value);
+                  if(selectedAiTitle) setSelectedAiTitle(null); 
+                }}
                 required
               />
             </div>
@@ -329,7 +331,10 @@ export default function NovoItemPage() {
                 id="descricao"
                 placeholder="Molho de tomate fresco, mozzarella de búfala, manjericão..."
                 value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
+                onChange={(e) => {
+                  setDescricao(e.target.value);
+                  if(selectedAiDescription) setSelectedAiDescription(null);
+                }}
                 rows={3}
               />
             </div>
