@@ -16,6 +16,8 @@ import { ArrowLeft, Loader2, CalendarDays, Info } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { db } from '@/lib/firebase/config';
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 export default function NovoCupomPage() {
   const router = useRouter();
@@ -32,6 +34,15 @@ export default function NovoCupomPage() {
   const [ativo, setAtivo] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  const resetForm = () => {
+    setNome('');
+    setTipo('percentual');
+    setValor('');
+    setDatas({ from: new Date(), to: addDays(new Date(), 7) });
+    setLimiteUso('');
+    setAtivo(true);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -41,7 +52,7 @@ export default function NovoCupomPage() {
       setIsLoading(false);
       return;
     }
-    if (valor === '' || valor <= 0) {
+    if (valor === '' || Number(valor) <= 0) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe um valor válido para o cupom.", variant: "destructive" });
       setIsLoading(false);
       return;
@@ -51,43 +62,44 @@ export default function NovoCupomPage() {
         setIsLoading(false);
         return;
     }
-    if (limiteUso !== '' && limiteUso < 0) {
+    if (limiteUso !== '' && Number(limiteUso) < 0) {
         toast({ title: "Valor inválido", description: "O limite de uso não pode ser negativo.", variant: "destructive"});
         setIsLoading(false);
         return;
     }
 
+    try {
+      const cuponsCollectionRef = collection(db, 'cupons');
+      await addDoc(cuponsCollectionRef, {
+        nome: nome.trim().toUpperCase(),
+        tipo,
+        valor: Number(valor),
+        dataInicio: Timestamp.fromDate(datas.from),
+        dataFim: Timestamp.fromDate(datas.to),
+        limiteUso: limiteUso === '' ? null : Number(limiteUso),
+        usos: 0, // Inicializa contador de usos
+        ativo,
+        dataCriacao: serverTimestamp(),
+      });
 
-    // Simulação de salvamento
-    console.log({
-      nome,
-      tipo,
-      valor,
-      dataInicio: datas.from,
-      dataValidade: datas.to,
-      limiteUso: limiteUso === '' ? null : limiteUso,
-      ativo,
-    });
+      toast({
+        title: "Cupom criado!",
+        description: "O novo cupom foi salvo com sucesso no Firestore.",
+      });
+      
+      resetForm();
+      router.push('/dashboard/cupons'); 
 
-    toast({
-      title: "Cupom em simulação!",
-      description: "Os dados do cupom foram registrados no console. A integração com Firestore virá em breve.",
-    });
-
-    // TODO: Integrar com Firestore para salvar o cupom
-    // try {
-    //   // Lógica para salvar no Firestore
-    //   toast({ title: "Cupom criado!", description: "O novo cupom foi salvo com sucesso." });
-    //   router.push('/dashboard/cupons');
-    // } catch (error) {
-    //   toast({ title: "Erro ao salvar", description: "Não foi possível criar o cupom.", variant: "destructive" });
-    // } finally {
-    //   setIsLoading(false);
-    // }
-    
-    // Por enquanto, apenas resetamos o loading e talvez redirecionar ou limpar
-    // Para fins de demonstração, não vamos redirecionar ainda.
-    setIsLoading(false); 
+    } catch (error) {
+      console.error("Erro ao salvar cupom: ", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível criar o cupom. Verifique o console para mais detalhes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const formatRangeForDisplay = (range: DateRange | undefined): string => {
@@ -188,7 +200,7 @@ export default function NovoCupomPage() {
                         placeholder="Nº de vezes que o cupom pode ser usado"
                         value={limiteUso}
                         onChange={(e) => setLimiteUso(e.target.value === '' ? '' : parseInt(e.target.value))}
-                        min="0"
+                        min="0" // Permite 0 se quiserem um limite de zero usos (embora incomum)
                     />
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Info className="h-3 w-3" /> Deixe em branco para usos ilimitados.
@@ -228,3 +240,6 @@ export default function NovoCupomPage() {
     </div>
   );
 }
+
+
+    
