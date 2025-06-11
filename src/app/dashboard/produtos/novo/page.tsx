@@ -11,10 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle } from "lucide-react";
+import { ArrowLeft, DollarSign, ImageIcon, UploadCloud, Trash2, PlusCircle, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
-import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
+// AI Flow imports removed
 // import { db } from '@/lib/firebase/config'; // Para o próximo passo
 // import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Para o próximo passo
 
@@ -44,17 +43,7 @@ export default function NovoItemPage() {
   const [imagemArquivo, setImagemArquivo] = useState<File | null>(null);
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
 
-  // AI Text Suggestions
-  const [aiKeywords, setAiKeywords] = useState('');
-  const [aiSuggestedTitles, setAiSuggestedTitles] = useState<string[] | null>(null);
-  const [aiSuggestedDescriptions, setAiSuggestedDescriptions] = useState<string[] | null>(null);
-  const [isLoadingAiSuggestions, setIsLoadingAiSuggestions] = useState(false);
-  const [selectedAiTitle, setSelectedAiTitle] = useState<string | null>(null);
-  const [selectedAiDescription, setSelectedAiDescription] = useState<string | null>(null);
-
-  // AI Image Generation
-  const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
-  const [isLoadingAiImage, setIsLoadingAiImage] = useState(false);
+  // AI related states removed
 
   // Placeholder para categorias - será carregado do Firestore depois
   const categoriasMock = [
@@ -74,75 +63,14 @@ export default function NovoItemPage() {
       };
       reader.readAsDataURL(imagemArquivo);
       setImagemUrl(''); 
-      setAiGeneratedImage(null); 
     } else if (imagemUrl) {
       setImagemPreview(imagemUrl);
-      setAiGeneratedImage(null); 
-    } else if (aiGeneratedImage) {
-      setImagemPreview(aiGeneratedImage);
     } else {
       setImagemPreview(null);
     }
-  }, [imagemUrl, imagemArquivo, aiGeneratedImage]);
+  }, [imagemUrl, imagemArquivo]);
 
-
-  const handleSuggestDetails = async () => {
-    if (!aiKeywords.trim()) {
-      toast({ title: "Palavras-chave vazias", description: "Digite algumas palavras-chave para a IA.", variant: "destructive" });
-      return;
-    }
-    setIsLoadingAiSuggestions(true);
-    setAiSuggestedTitles(null);
-    setAiSuggestedDescriptions(null);
-    setSelectedAiTitle(null);
-    setSelectedAiDescription(null);
-    try {
-      const result = await suggestItemDetails({ keywords: aiKeywords });
-      setAiSuggestedTitles(result.suggestedTitles || []);
-      setAiSuggestedDescriptions(result.suggestedDescriptions || []);
-      toast({ title: "Sugestões Prontas!", description: "A IA preparou sugestões de título e descrição." });
-    } catch (error) {
-      console.error("Erro ao sugerir detalhes:", error);
-      toast({ title: "Erro da IA", description: "Não foi possível gerar sugestões. Tente novamente.", variant: "destructive" });
-    } finally {
-      setIsLoadingAiSuggestions(false);
-    }
-  };
-
-  const handleApplyAiTitle = (title: string) => {
-    setNome(title);
-    setSelectedAiTitle(title);
-  };
-
-  const handleApplyAiDescription = (description: string) => {
-    setDescricao(description);
-    setSelectedAiDescription(description);
-  };
-
-  const handleGenerateImage = async () => {
-    if (!nome.trim()) {
-      toast({ title: "Nome do item vazio", description: "Digite um nome para o item antes de gerar a imagem.", variant: "destructive" });
-      return;
-    }
-    setIsLoadingAiImage(true);
-    setAiGeneratedImage(null);
-    setImagemArquivo(null);
-    setImagemUrl('');
-    try {
-      const result = await generateItemImage({ title: nome });
-      if (result.imageDataUri) {
-        setAiGeneratedImage(result.imageDataUri);
-        toast({ title: "Imagem Gerada!", description: "A IA criou uma imagem para seu item." });
-      } else {
-         toast({ title: "Erro da IA", description: "A IA não retornou uma imagem.", variant: "destructive" });
-      }
-    } catch (error) {
-      console.error("Erro ao gerar imagem:", error);
-      toast({ title: "Erro da IA", description: "Não foi possível gerar a imagem. Tente novamente.", variant: "destructive" });
-    } finally {
-      setIsLoadingAiImage(false);
-    }
-  };
+  // AI related functions removed
   
   const handleAddAdicional = () => {
     if (!novoAdicionalNome.trim()) {
@@ -189,9 +117,9 @@ export default function NovoItemPage() {
       valor: Number(valor),
       categoria,
       adicionais: adicionais.map(({id, ...rest}) => rest), 
-      imagemUrl: aiGeneratedImage || imagemUrl.trim(), 
+      imagemUrl: imagemUrl.trim(), 
       imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null,
-      foiGeradoPorIA: !!aiGeneratedImage,
+      // foiGeradoPorIA: false // Removed as AI image generation is removed
     };
 
     console.log("Dados do Item para Salvar:", itemData);
@@ -217,74 +145,12 @@ export default function NovoItemPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline">Adicionar Novo Item</h1>
           <p className="text-muted-foreground">
-            Preencha os detalhes ou use a IA para ajudar.
+            Preencha os detalhes do novo item do cardápio.
           </p>
         </div>
       </div>
 
-      {/* AI Suggestions Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA</CardTitle>
-          <CardDescription>
-            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir títulos e descrições.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              id="aiKeywords"
-              placeholder="Ex: burger artesanal bacon cheddar"
-              value={aiKeywords}
-              onChange={(e) => setAiKeywords(e.target.value)}
-              className="flex-grow"
-            />
-            <Button onClick={handleSuggestDetails} disabled={isLoadingAiSuggestions} className="w-full sm:w-auto">
-              {isLoadingAiSuggestions ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-              Sugerir com IA
-            </Button>
-          </div>
-          {(aiSuggestedTitles && aiSuggestedTitles.length > 0) && (
-            <div className="space-y-2 p-4 border rounded-md bg-muted/30">
-              <Label className="font-semibold text-base">Títulos Sugeridos:</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {aiSuggestedTitles.map((title, index) => (
-                  <Button
-                    key={`title-${index}`}
-                    type="button"
-                    variant={selectedAiTitle === title ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleApplyAiTitle(title)}
-                    className="text-left justify-start h-auto py-2 leading-snug"
-                  >
-                    {selectedAiTitle === title && <CheckCircle className="h-4 w-4 mr-2 text-primary-foreground group-hover:text-primary-foreground" />}
-                    {title}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-          {(aiSuggestedDescriptions && aiSuggestedDescriptions.length > 0) && (
-             <div className="space-y-2 p-4 border rounded-md bg-muted/30 mt-4">
-              <Label className="font-semibold text-base">Descrições Sugeridas:</Label>
-                {aiSuggestedDescriptions.map((desc, index) => (
-                  <Button
-                      key={`desc-${index}`}
-                      type="button"
-                      variant={selectedAiDescription === desc ? "secondary" : "outline"}
-                      onClick={() => handleApplyAiDescription(desc)}
-                      className="w-full text-left justify-start h-auto py-2 mb-1 whitespace-normal leading-snug text-sm hover:bg-accent/50"
-                    >
-                    <div className="flex items-start w-full">
-                      {selectedAiDescription === desc && <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-secondary-foreground" />}
-                      <span className="flex-1">{desc}</span>
-                    </div>
-                    </Button>
-                ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* AI Suggestions Card Removed */}
 
       <Card>
         <form onSubmit={handleSubmit}>
@@ -301,10 +167,7 @@ export default function NovoItemPage() {
                 id="nome"
                 placeholder="Ex: Pizza Margherita Grande"
                 value={nome}
-                onChange={(e) => {
-                  setNome(e.target.value);
-                  if(selectedAiTitle) setSelectedAiTitle(null); 
-                }}
+                onChange={(e) => setNome(e.target.value)}
                 required
               />
             </div>
@@ -315,10 +178,7 @@ export default function NovoItemPage() {
                 id="descricao"
                 placeholder="Molho de tomate fresco, mozzarella de búfala, manjericão..."
                 value={descricao}
-                onChange={(e) => {
-                  setDescricao(e.target.value);
-                  if(selectedAiDescription) setSelectedAiDescription(null);
-                }}
+                onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
               />
             </div>
@@ -401,7 +261,7 @@ export default function NovoItemPage() {
                                 type="url"
                                 placeholder="https://exemplo.com/imagem.png"
                                 value={imagemUrl}
-                                onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); setAiGeneratedImage(null); }}
+                                onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); }}
                             />
                         </div>
                          <div className="text-center text-sm text-muted-foreground my-2">OU</div>
@@ -420,19 +280,13 @@ export default function NovoItemPage() {
                                       } else {
                                         setImagemArquivo(file);
                                         setImagemUrl('');
-                                        setAiGeneratedImage(null);
                                       }
                                     }
                                 }}
                                 className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                             />
                         </div>
-                        <div className="text-center text-sm text-muted-foreground my-2">OU</div>
-                         <Button type="button" onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim()} className="w-full">
-                            {isLoadingAiImage ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                            Gerar Imagem com IA (usando nome do item)
-                        </Button>
-                        {isLoadingAiImage && <p className="text-xs text-muted-foreground text-center">A IA está criando, pode levar alguns segundos...</p>}
+                        {/* AI Image generation button removed */}
                     </div>
                     
                     <div className="space-y-2">
@@ -442,14 +296,12 @@ export default function NovoItemPage() {
                                 <Image src={imagemPreview} alt="Pré-visualização" width={200} height={192} className="object-contain max-h-full max-w-full" data-ai-hint="food item" />
                             ) : (
                                 <div className="text-center text-muted-foreground p-4">
-                                    <ImageIcon className="mx-auto h-12 w-12 mb-2" />
-                                    <p className="text-xs">Nenhuma imagem selecionada, fornecida ou gerada.</p>
+                                    <UploadCloud className="mx-auto h-12 w-12 mb-2" /> {/* Changed icon */}
+                                    <p className="text-xs">Nenhuma imagem selecionada ou URL fornecida.</p>
                                 </div>
                             )}
                         </div>
-                        {aiGeneratedImage && imagemPreview === aiGeneratedImage && (
-                             <p className="text-xs text-primary text-center flex items-center justify-center gap-1"><Info className="h-3 w-3"/> Imagem gerada pela IA. Você pode substituí-la.</p>
-                        )}
+                        {/* AI generated image info removed */}
                     </div>
                 </div>
             </div>
