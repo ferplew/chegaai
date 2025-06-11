@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import Link from "next/link"; // Import Link
 
 // Dados de exemplo para os endereços
 const mockEnderecos = [
@@ -46,9 +47,11 @@ export default function EnderecosPage() {
           <h1 className="text-3xl font-bold font-headline">Endereços</h1>
           <p className="text-muted-foreground">Gerencie os endereços de entrega e retirada.</p>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Adicionar Endereço Manualmente
+        <Button asChild>
+          <Link href="/dashboard/enderecos/novo"> {/* Link to the new page */}
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Endereço Manualmente
+          </Link>
         </Button>
       </div>
 
