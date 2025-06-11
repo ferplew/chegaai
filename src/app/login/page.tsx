@@ -191,17 +191,24 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Erro no login com Google:", error); // Log completo do erro no console
-      let errorMessage = "Ocorreu um erro ao tentar fazer login com o Google.";
+
+      let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google. Verifique o console para mais detalhes.";
+
       if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "A janela de login do Google foi fechada antes da conclusão.";
+        descriptionMessage = "A janela de login do Google foi fechada antes da conclusão.";
       } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = "Múltiplas tentativas de login com o Google. Tente novamente.";
+        descriptionMessage = "Múltiplas tentativas de login com o Google. Por favor, tente novamente.";
+      } else if (error.code && error.message) {
+        descriptionMessage = `Erro (${error.code}): ${error.message}.`;
       } else if (error.code) {
-        errorMessage = `Erro: ${error.code}. Consulte o console para mais detalhes.`;
+        descriptionMessage = `Erro: ${error.code}. Consulte o console para mais detalhes.`;
+      } else if (error.message) {
+        descriptionMessage = `Erro: ${error.message}.`;
       }
+      
       toast({
         title: "Erro no Login com Google",
-        description: errorMessage,
+        description: descriptionMessage,
         variant: "destructive",
       });
     }
