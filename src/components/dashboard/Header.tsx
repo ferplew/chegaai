@@ -10,10 +10,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 export function DashboardHeader() {
   const sidebarContext = useSidebar();
 
-  if (!sidebarContext) {
-    console.warn("DashboardHeader: SidebarContext is not available. Rendering will be skipped.");
-    return null; 
-  }
+  // useSidebar now guarantees a valid object, so no null check needed here.
   const { toggleSidebar, isMobile, state: sidebarState } = sidebarContext;
 
 

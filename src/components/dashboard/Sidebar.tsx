@@ -70,14 +70,11 @@ const settingsNavItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const sidebarContext = useSidebar();
+  const sidebarContext = useSidebar(); 
   const router = useRouter();
   const { toast } = useToast();
 
-  if (!sidebarContext) {
-    console.warn("DashboardSidebar: SidebarContext is not available. Rendering will be skipped.");
-    return null; 
-  }
+  // useSidebar now guarantees a valid object, so no null check needed here.
   const { state, toggleSidebar, isMobile } = sidebarContext;
 
   const handleSignOut = async () => {

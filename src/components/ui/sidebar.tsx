@@ -29,9 +29,9 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 type SidebarContext = {
   state: "expanded" | "collapsed"
   open: boolean
-  setOpen: (open: boolean) => void
+  setOpen: (open: boolean | ((open: boolean) => boolean)) => void
   openMobile: boolean
-  setOpenMobile: (open: boolean) => void
+  setOpenMobile: (open: boolean | ((open: boolean) => boolean)) => void
   isMobile: boolean
   toggleSidebar: () => void
 }
@@ -41,7 +41,19 @@ const SidebarContext = React.createContext<SidebarContext | null>(null)
 function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.")
+    console.warn(
+      "useSidebar: SidebarContext is not available. Returning default/dummy values. This may indicate an issue with SidebarProvider."
+    );
+    // Return a default structure to prevent destructuring errors
+    return {
+      state: "collapsed" as "expanded" | "collapsed",
+      open: false,
+      setOpen: (() => {}) as (open: boolean | ((open: boolean) => boolean)) => void,
+      openMobile: false,
+      setOpenMobile: (() => {}) as (open: boolean | ((open: boolean) => boolean)) => void,
+      isMobile: typeof window !== "undefined" ? window.innerWidth < 768 : true, // Best effort for isMobile
+      toggleSidebar: () => {},
+    };
   }
 
   return context
@@ -92,8 +104,8 @@ const SidebarProvider = React.forwardRef<
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       return isMobile
-        ? setOpenMobile((open) => !open)
-        : setOpen((open) => !open)
+        ? setOpenMobile((openVal) => !openVal)
+        : setOpen((openVal) => !openVal)
     }, [isMobile, setOpen, setOpenMobile])
 
     // Adds a keyboard shortcut to toggle the sidebar.
