@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Table = React.forwardRef<
+const TableRoot = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
@@ -14,17 +14,19 @@ const Table = React.forwardRef<
     />
   </div>
 ))
-Table.displayName = "Table"
+TableRoot.displayName = "TableRoot"
+const Table = React.memo(TableRoot);
 
-const TableHeader = React.forwardRef<
+const TableHeaderRoot = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
   <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
 ))
-TableHeader.displayName = "TableHeader"
+TableHeaderRoot.displayName = "TableHeaderRoot"
+const TableHeader = React.memo(TableHeaderRoot);
 
-const TableBody = React.forwardRef<
+const TableBodyRoot = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
@@ -34,9 +36,10 @@ const TableBody = React.forwardRef<
     {...props}
   />
 ))
-TableBody.displayName = "TableBody"
+TableBodyRoot.displayName = "TableBodyRoot"
+const TableBody = React.memo(TableBodyRoot);
 
-const TableFooter = React.forwardRef<
+const TableFooterRoot = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
@@ -49,9 +52,10 @@ const TableFooter = React.forwardRef<
     {...props}
   />
 ))
-TableFooter.displayName = "TableFooter"
+TableFooterRoot.displayName = "TableFooterRoot"
+const TableFooter = React.memo(TableFooterRoot);
 
-const TableRow = React.forwardRef<
+const TableRowRoot = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
 >(({ className, ...props }, ref) => (
@@ -64,9 +68,10 @@ const TableRow = React.forwardRef<
     {...props}
   />
 ))
-TableRow.displayName = "TableRow"
+TableRowRoot.displayName = "TableRowRoot"
+const TableRow = React.memo(TableRowRoot);
 
-const TableHead = React.forwardRef<
+const TableHeadRoot = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
@@ -79,9 +84,10 @@ const TableHead = React.forwardRef<
     {...props}
   />
 ))
-TableHead.displayName = "TableHead"
+TableHeadRoot.displayName = "TableHeadRoot"
+const TableHead = React.memo(TableHeadRoot);
 
-const TableCell = React.forwardRef<
+const TableCellRoot = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
@@ -91,9 +97,10 @@ const TableCell = React.forwardRef<
     {...props}
   />
 ))
-TableCell.displayName = "TableCell"
+TableCellRoot.displayName = "TableCellRoot"
+const TableCell = React.memo(TableCellRoot);
 
-const TableCaption = React.forwardRef<
+const TableCaptionRoot = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
@@ -103,7 +110,8 @@ const TableCaption = React.forwardRef<
     {...props}
   />
 ))
-TableCaption.displayName = "TableCaption"
+TableCaptionRoot.displayName = "TableCaptionRoot"
+const TableCaption = React.memo(TableCaptionRoot);
 
 export {
   Table,
