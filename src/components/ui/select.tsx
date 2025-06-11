@@ -6,13 +6,16 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+const SelectRoot = SelectPrimitive.Root
+const Select = React.memo(SelectRoot);
 
-const SelectGroup = SelectPrimitive.Group
+const SelectGroupRoot = SelectPrimitive.Group
+const SelectGroup = React.memo(SelectGroupRoot);
 
-const SelectValue = SelectPrimitive.Value
+const SelectValueRoot = SelectPrimitive.Value
+const SelectValue = React.memo(SelectValueRoot);
 
-const SelectTrigger = React.forwardRef<
+const SelectTriggerComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
@@ -30,9 +33,11 @@ const SelectTrigger = React.forwardRef<
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
-SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+SelectTriggerComponent.displayName = "SelectTriggerComponent"
+const SelectTrigger = React.memo(SelectTriggerComponent);
 
-const SelectScrollUpButton = React.forwardRef<
+
+const SelectScrollUpButtonComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
 >(({ className, ...props }, ref) => (
@@ -47,9 +52,10 @@ const SelectScrollUpButton = React.forwardRef<
     <ChevronUp className="h-4 w-4" />
   </SelectPrimitive.ScrollUpButton>
 ))
-SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+SelectScrollUpButtonComponent.displayName = "SelectScrollUpButtonComponent"
+const SelectScrollUpButton = React.memo(SelectScrollUpButtonComponent);
 
-const SelectScrollDownButton = React.forwardRef<
+const SelectScrollDownButtonComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
 >(({ className, ...props }, ref) => (
@@ -64,10 +70,10 @@ const SelectScrollDownButton = React.forwardRef<
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
 ))
-SelectScrollDownButton.displayName =
-  SelectPrimitive.ScrollDownButton.displayName
+SelectScrollDownButtonComponent.displayName = "SelectScrollDownButtonComponent"
+const SelectScrollDownButton = React.memo(SelectScrollDownButtonComponent);
 
-const SelectContent = React.forwardRef<
+const SelectContentComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
@@ -97,9 +103,10 @@ const SelectContent = React.forwardRef<
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ))
-SelectContent.displayName = SelectPrimitive.Content.displayName
+SelectContentComponent.displayName = "SelectContentComponent"
+const SelectContent = React.memo(SelectContentComponent);
 
-const SelectLabel = React.forwardRef<
+const SelectLabelComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
 >(({ className, ...props }, ref) => (
@@ -109,9 +116,10 @@ const SelectLabel = React.forwardRef<
     {...props}
   />
 ))
-SelectLabel.displayName = SelectPrimitive.Label.displayName
+SelectLabelComponent.displayName = "SelectLabelComponent"
+const SelectLabel = React.memo(SelectLabelComponent);
 
-const SelectItem = React.forwardRef<
+const SelectItemComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => (
@@ -132,9 +140,10 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
-SelectItem.displayName = SelectPrimitive.Item.displayName
+SelectItemComponent.displayName = "SelectItemComponent"
+const SelectItem = React.memo(SelectItemComponent);
 
-const SelectSeparator = React.forwardRef<
+const SelectSeparatorComponent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
@@ -144,7 +153,9 @@ const SelectSeparator = React.forwardRef<
     {...props}
   />
 ))
-SelectSeparator.displayName = SelectPrimitive.Separator.displayName
+SelectSeparatorComponent.displayName = "SelectSeparatorComponent"
+const SelectSeparator = React.memo(SelectSeparatorComponent);
+
 
 export {
   Select,
