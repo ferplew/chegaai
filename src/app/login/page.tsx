@@ -238,7 +238,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <Link href="/" className="mb-8">
+      <Link href="/" className="mb-8 flex justify-center">
         <ChegaAiLogo className="h-12 text-primary" />
       </Link>
       <Card className="w-full max-w-md shadow-2xl shadow-primary/10">
