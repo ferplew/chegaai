@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, DollarSign, Clock, Loader, ArrowUpRight, ExternalLink } from "lucide-react";
+import { ShoppingCart, DollarSign, Clock, Loader, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import Link from "next/link";
@@ -182,6 +182,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-// Need to add PlusCircle to lucide-react imports if not already there
-import { PlusCircle } from 'lucide-react';
