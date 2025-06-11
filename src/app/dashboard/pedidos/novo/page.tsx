@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link";
 import { ArrowLeft, Loader2, DollarSign, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timestamp } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
@@ -57,7 +57,10 @@ export default function NovoPedidoPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    if (!nomeCliente.trim()) {
+    const nomeClienteTrimmed = nomeCliente.trim();
+    const telefoneClienteTrimmed = telefoneCliente.trim();
+
+    if (!nomeClienteTrimmed) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe o nome do cliente.", variant: "destructive" });
       setIsLoading(false);
       return;
@@ -78,27 +81,28 @@ export default function NovoPedidoPage() {
       return;
     }
 
+    const enderecoData = (enderecoRua.trim() || enderecoCidade.trim() || enderecoCep.trim()) ? {
+        rua: enderecoRua.trim() || null,
+        numero: enderecoNumero.trim() || null,
+        bairro: enderecoBairro.trim() || null,
+        cidade: enderecoCidade.trim() || null,
+        cep: enderecoCep.trim() || null,
+        complemento: enderecoComplemento.trim() || null,
+        referencia: enderecoReferencia.trim() || null,
+    } : null;
+
     try {
       const pedidosCollectionRef = collection(db, 'pedidos');
       const pedidoDocRef = await addDoc(pedidosCollectionRef, {
-        nomeCliente: nomeCliente.trim(),
-        telefoneCliente: telefoneCliente.trim(),
+        nomeCliente: nomeClienteTrimmed,
+        telefoneCliente: telefoneClienteTrimmed,
         itensPedido: itensPedido.trim(),
         valorTotal: Number(valorTotal),
         formaPagamento,
         observacoes: observacoes.trim(),
         status: "Novo", 
         dataCriacao: serverTimestamp(),
-        // Campos de endereço podem ser associados ao pedido se necessário
-        endereco: (enderecoRua.trim() && enderecoCidade.trim() && enderecoCep.trim()) ? {
-            rua: enderecoRua.trim(),
-            numero: enderecoNumero.trim(),
-            bairro: enderecoBairro.trim(),
-            cidade: enderecoCidade.trim(),
-            cep: enderecoCep.trim(),
-            complemento: enderecoComplemento.trim(),
-            referencia: enderecoReferencia.trim(),
-        } : null,
+        endereco: enderecoData,
       });
 
       toast({
@@ -106,32 +110,59 @@ export default function NovoPedidoPage() {
         description: "O novo pedido foi salvo com sucesso no Firestore.",
       });
       
-      // Salvar endereço automaticamente se preenchido
-      if (enderecoRua.trim() && enderecoCidade.trim() && enderecoCep.trim()) {
+      // Cadastro automático de cliente, se não existir
+      const clientesCollectionRef = collection(db, 'clientes');
+      let clienteQuery = query(clientesCollectionRef, where('nomeLower', '==', nomeClienteTrimmed.toLowerCase()));
+      if (telefoneClienteTrimmed) {
+        // Se o telefone for fornecido, a busca fica mais específica
+        clienteQuery = query(clientesCollectionRef, 
+          where('nomeLower', '==', nomeClienteTrimmed.toLowerCase()),
+          where('telefone', '==', telefoneClienteTrimmed)
+        );
+      }
+      
+      const clienteSnapshot = await getDocs(clienteQuery);
+
+      if (clienteSnapshot.empty) {
+        await addDoc(clientesCollectionRef, {
+          nome: nomeClienteTrimmed,
+          nomeLower: nomeClienteTrimmed.toLowerCase(),
+          telefone: telefoneClienteTrimmed || null,
+          email: null, // Email não é coletado no formulário de pedido
+          endereco: enderecoData, // Salva o mesmo endereço do pedido
+          dataCadastro: serverTimestamp(),
+          origem: 'pedido', // Indica que o cliente foi criado a partir de um pedido
+        });
+        toast({
+          title: "Novo cliente cadastrado!",
+          description: `Cliente ${nomeClienteTrimmed} foi adicionado à base de dados.`,
+          variant: "default" 
+        });
+      } else {
+        // Cliente já existe, não faz nada ou poderia atualizar, mas vamos manter simples por agora.
+        console.log(`Cliente ${nomeClienteTrimmed} já cadastrado.`);
+      }
+
+      // Salvar endereço separadamente se preenchido (mantendo a lógica original, mas agora o cliente também pode ter o endereço)
+      if (enderecoData) {
         try {
           const enderecosCollectionRef = collection(db, 'enderecos');
           await addDoc(enderecosCollectionRef, {
-            rua: enderecoRua.trim(),
-            numero: enderecoNumero.trim(),
-            bairro: enderecoBairro.trim(),
-            cidade: enderecoCidade.trim(),
-            cep: enderecoCep.trim(),
-            complemento: enderecoComplemento.trim(),
-            referencia: enderecoReferencia.trim(),
-            pedidoId: pedidoDocRef.id, // Opcional: vincular ao pedido
-            clienteNome: nomeCliente.trim(), // Opcional: vincular ao cliente
+            ...enderecoData,
+            pedidoId: pedidoDocRef.id,
+            clienteNome: nomeClienteTrimmed,
             dataCriacao: serverTimestamp(),
           });
           toast({
-            title: "Endereço salvo!",
-            description: "O endereço de entrega foi registrado automaticamente.",
-            variant: "default",
+            title: "Endereço do pedido salvo!",
+            description: "O endereço de entrega foi registrado na coleção de endereços.",
+            variant: "default", 
           });
         } catch (addressError) {
-          console.error("Erro ao salvar endereço: ", addressError);
+          console.error("Erro ao salvar endereço separadamente: ", addressError);
           toast({
-            title: "Erro ao salvar endereço",
-            description: "Não foi possível registrar o endereço automaticamente. Verifique o console.",
+            title: "Erro ao salvar endereço do pedido",
+            description: "Não foi possível registrar o endereço na coleção de endereços. Verifique o console.",
             variant: "destructive",
           });
         }
@@ -262,7 +293,6 @@ export default function NovoPedidoPage() {
               />
             </div>
 
-            {/* Seção de Endereço de Entrega */}
             <Card className="pt-4 mt-6 border-dashed">
                 <CardHeader className="py-0 pb-4">
                     <CardTitle className="text-xl flex items-center gap-2">
@@ -330,5 +360,4 @@ export default function NovoPedidoPage() {
     </div>
   );
 }
-
     
