@@ -2,17 +2,17 @@
 "use client";
 
 import Link from 'next/link';
+import React from 'react'; // Import React
 import { Button } from '@/components/ui/button';
 import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 import { PanelLeft } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
-export function DashboardHeader() {
+function DashboardHeaderComponent() {
   const sidebarContextValue = useSidebar();
 
-  // Access properties defensively
   const toggleSidebar = sidebarContextValue?.toggleSidebar ?? (() => {});
-  const isMobile = sidebarContextValue?.isMobile ?? false; // Default to false
+  const isMobile = sidebarContextValue?.isMobile ?? true; 
 
 
   return (
@@ -33,3 +33,5 @@ export function DashboardHeader() {
     </header>
   );
 }
+
+export const DashboardHeader = React.memo(DashboardHeaderComponent);

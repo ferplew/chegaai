@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import React from 'react'; // Import React
 import {
   Home,
   Archive,
@@ -67,16 +68,15 @@ const settingsNavItems = [
 ];
 
 
-export function DashboardSidebar() {
+function DashboardSidebarComponent() {
   const pathname = usePathname();
   const sidebarContextValue = useSidebar(); 
   const router = useRouter();
   const { toast } = useToast();
 
-  // Access properties defensively to avoid destructuring errors
   const state = sidebarContextValue?.state ?? "collapsed";
   const toggleSidebar = sidebarContextValue?.toggleSidebar ?? (() => {});
-  const isMobile = sidebarContextValue?.isMobile ?? false; // Default to false, useIsMobile hook in provider will determine actual
+  const isMobile = sidebarContextValue?.isMobile ?? true; 
   const setOpenMobile = sidebarContextValue?.setOpenMobile ?? (() => {});
 
 
@@ -182,3 +182,5 @@ export function DashboardSidebar() {
     </ShadSidebar>
   );
 }
+
+export const DashboardSidebar = React.memo(DashboardSidebarComponent);
