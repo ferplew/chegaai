@@ -22,7 +22,6 @@ import {
   LogOut,
   PanelLeft
 } from 'lucide-react';
-// ChegaAiLogo import removed as it's no longer used in the header
 import {
   Sidebar as ShadSidebar,
   SidebarHeader,
@@ -54,10 +53,10 @@ const mainNavItems = [
 ];
 
 const cadastrosNavItems = [
-  { href: '/dashboard/produtos', label: 'Itens', icon: Package }, // Produtos page is used for Itens
+  { href: '/dashboard/produtos', label: 'Itens', icon: Package }, 
   { href: '/dashboard/cadastros/categorias', label: 'Categorias', icon: LayoutGrid },
   { href: '/dashboard/cadastros/clientes', label: 'Clientes', icon: Users2 },
-  { href: '/dashboard/usuarios', label: 'Funcionários', icon: Briefcase }, // Usuarios page is used for Funcionários
+  { href: '/dashboard/usuarios', label: 'Funcionários', icon: Briefcase }, 
 ];
 
 const settingsNavItems = [
@@ -70,18 +69,15 @@ const settingsNavItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const sidebarContext = useSidebar(); 
+  const sidebarContextValue = useSidebar(); 
   const router = useRouter();
   const { toast } = useToast();
 
-  // Explicit check for context before destructuring
-  if (!sidebarContext) {
-    // This should ideally not happen if useSidebar's fallback is working,
-    // but acts as an additional safeguard.
-    console.warn("DashboardSidebar: sidebarContext is not available. Sidebar might not function correctly.");
-    return null; // Or render a minimal non-functional sidebar
-  }
-  const { state, toggleSidebar, isMobile, setOpenMobile } = sidebarContext;
+  // Access properties defensively to avoid destructuring errors
+  const state = sidebarContextValue?.state ?? "collapsed";
+  const toggleSidebar = sidebarContextValue?.toggleSidebar ?? (() => {});
+  const isMobile = sidebarContextValue?.isMobile ?? false; // Default to false, useIsMobile hook in provider will determine actual
+  const setOpenMobile = sidebarContextValue?.setOpenMobile ?? (() => {});
 
 
   const handleSignOut = async () => {

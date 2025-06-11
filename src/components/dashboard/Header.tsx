@@ -8,20 +8,11 @@ import { PanelLeft } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
 export function DashboardHeader() {
-  const sidebarContext = useSidebar();
+  const sidebarContextValue = useSidebar();
 
-  // Explicit check for context before destructuring
-  if (!sidebarContext) {
-    // This should ideally not happen if useSidebar's fallback is working,
-    // but acts as an additional safeguard.
-    console.warn("DashboardHeader: sidebarContext is not available. Header might not function correctly.");
-    return ( // Render a fallback or null if context is critical
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 shadow-sm backdrop-blur-md md:px-6">
-        {/* Minimal header if context fails */}
-      </header>
-    );
-  }
-  const { toggleSidebar, isMobile, state: sidebarState } = sidebarContext;
+  // Access properties defensively
+  const toggleSidebar = sidebarContextValue?.toggleSidebar ?? (() => {});
+  const isMobile = sidebarContextValue?.isMobile ?? false; // Default to false
 
 
   return (
