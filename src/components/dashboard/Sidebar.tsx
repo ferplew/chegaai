@@ -88,17 +88,18 @@ export function DashboardSidebar() {
   const renderNavItems = (items: typeof mainNavItems | typeof cadastrosNavItems | typeof settingsNavItems) => {
     return items.map((item) => (
       <SidebarMenuItem key={item.label}>
-        <Link href={item.href} passHref legacyBehavior={false}>
-          <SidebarMenuButton
-            isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
-            tooltip={{ children: item.label, side: 'right', hidden: state === 'expanded' || isMobile }}
-            className="justify-start"
-            aria-label={item.label}
-          >
+        <SidebarMenuButton
+          asChild // Permite que Link seja o filho direto e controle a navegação
+          isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
+          tooltip={{ children: item.label, side: 'right', hidden: state === 'expanded' || isMobile }}
+          className="justify-start"
+          aria-label={item.label}
+        >
+          <Link href={item.href}>
             <item.icon className="h-5 w-5" />
             <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
-          </SidebarMenuButton>
-        </Link>
+          </Link>
+        </SidebarMenuButton>
       </SidebarMenuItem>
     ));
   }
