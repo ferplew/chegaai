@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,20 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ThemeToggle } from "@/components/ThemeToggle"; // Re-using theme toggle logic
+// ThemeToggle removed, it's now in its own page /dashboard/tema
 
 export default function ConfiguracoesPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold font-headline">Configurações</h1>
-        <p className="text-muted-foreground">Ajuste as preferências do seu restaurante.</p>
+        <h1 className="text-3xl font-bold font-headline">Configurações Gerais</h1>
+        <p className="text-muted-foreground">Ajustes e preferências do seu restaurante.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Informações do Restaurante</CardTitle>
-          <CardDescription>Dados básicos do seu estabelecimento.</CardDescription>
+          <CardTitle>Informações do Restaurante (Exemplo)</CardTitle>
+          <CardDescription>Estes dados podem ser movidos para "Perfil do Negócio".</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
@@ -32,28 +33,10 @@ export default function ConfiguracoesPage() {
           <Button>Salvar Informações</Button>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferências de Aparência</CardTitle>
-          <CardDescription>Personalize a visualização do painel.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div>
-              <Label htmlFor="theme-mode" className="font-medium">Modo de Exibição</Label>
-              <p className="text-sm text-muted-foreground">
-                Alterne entre os temas claro e escuro.
-              </p>
-            </div>
-            <ThemeToggle /> {/* Using the existing ThemeToggle component */}
-          </div>
-        </CardContent>
-      </Card>
       
       <Card>
         <CardHeader>
-          <CardTitle>Conexões Externas (APIs)</CardTitle>
+          <CardTitle>Conexões Externas (APIs) (Exemplo)</CardTitle>
           <CardDescription>Integre com outros serviços (ex: iFood, apps de delivery).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -67,6 +50,15 @@ export default function ConfiguracoesPage() {
             <Switch id="ifood-integration" />
           </div>
            <Button variant="outline" disabled>Configurar Integrações</Button>
+        </CardContent>
+      </Card>
+       <Card>
+        <CardHeader>
+          <CardTitle>Outras Configurações</CardTitle>
+          <CardDescription>Este é um espaço para outras configurações que não se encaixam nas novas seções "Perfil do Negócio", "Conta e Segurança" ou "Tema".</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-32 border border-dashed rounded-md">
+           <p className="text-muted-foreground">Mais configurações aqui...</p>
         </CardContent>
       </Card>
     </div>
