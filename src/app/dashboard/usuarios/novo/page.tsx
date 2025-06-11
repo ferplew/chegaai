@@ -9,31 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-
-const perfisDisponiveis = [
-  { id: 'Admin', nome: 'Administrador' },
-  { id: 'Gerente', nome: 'Gerente' },
-  { id: 'Operador', nome: 'Operador de Caixa' },
-  { id: 'Cozinha', nome: 'Cozinha' },
-];
 
 export default function NovoFuncionarioPage() {
   const router = useRouter();
   const { toast } = useToast();
 
   const [nome, setNome] = useState('');
-  const [perfil, setPerfil] = useState('');
+  const [funcao, setFuncao] = useState(''); // Alterado de perfil para funcao
   const [status, setStatus] = useState(true); // true = Ativo, false = Inativo
   const [isLoading, setIsLoading] = useState(false);
 
   const resetForm = () => {
     setNome('');
-    setPerfil('');
+    setFuncao(''); // Alterado de perfil para funcao
     setStatus(true);
   };
 
@@ -41,8 +33,8 @@ export default function NovoFuncionarioPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    if (!nome.trim() || !perfil) {
-      toast({ title: "Campos obrigatórios", description: "Nome e Perfil são obrigatórios.", variant: "destructive" });
+    if (!nome.trim() || !funcao.trim()) { // Validar funcao
+      toast({ title: "Campos obrigatórios", description: "Nome e Função são obrigatórios.", variant: "destructive" });
       setIsLoading(false);
       return;
     }
@@ -51,7 +43,7 @@ export default function NovoFuncionarioPage() {
       const funcionariosCollectionRef = collection(db, 'funcionarios');
       await addDoc(funcionariosCollectionRef, {
         nome: nome.trim(),
-        perfil: perfil,
+        funcao: funcao.trim(), // Salvar funcao
         status: status ? 'Ativo' : 'Inativo',
         dataCriacao: serverTimestamp(),
       });
@@ -101,7 +93,7 @@ export default function NovoFuncionarioPage() {
           <CardHeader>
             <CardTitle>Dados do Funcionário</CardTitle>
             <CardDescription>
-              Preencha as informações para identificar o funcionário e seu papel.
+              Preencha as informações para identificar o funcionário e sua função.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -120,17 +112,15 @@ export default function NovoFuncionarioPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                  <div className="space-y-2">
-                    <Label htmlFor="perfil">Perfil de Acesso <span className="text-destructive">*</span></Label>
-                    <Select value={perfil} onValueChange={setPerfil} name="perfil" required disabled={isLoading}>
-                        <SelectTrigger id="perfil">
-                            <SelectValue placeholder="Selecione um perfil..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {perfisDisponiveis.map(p => (
-                                <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Label htmlFor="funcao">Função do Funcionário <span className="text-destructive">*</span></Label>
+                    <Input
+                        id="funcao"
+                        placeholder="Ex: Cozinheiro, Garçom, Caixa"
+                        value={funcao}
+                        onChange={(e) => setFuncao(e.target.value)}
+                        required
+                        disabled={isLoading}
+                    />
                 </div>
                 <div className="space-y-2 flex items-center gap-3 rounded-md border p-3 h-fit bg-card">
                     <Switch id="status" checked={status} onCheckedChange={setStatus} disabled={isLoading} />

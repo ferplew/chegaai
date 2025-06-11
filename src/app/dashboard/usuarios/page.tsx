@@ -15,22 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
 interface Funcionario {
-  id: string; // Firestore document ID
+  id: string; 
   nome: string;
-  perfil: 'Admin' | 'Operador' | 'Gerente' | 'Cozinha' | string; // Tipos específicos + string para flexibilidade
+  funcao: string; // Alterado de perfil para funcao
   status: 'Ativo' | 'Inativo';
   dataCriacao?: Timestamp;
-}
-
-function getPerfilBadgeVariant(perfil: string): "default" | "secondary" | "outline" {
-  switch (perfil?.toLowerCase()) {
-    case 'admin':
-      return 'default';
-    case 'gerente':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
 }
 
 function getStatusBadgeVariant(status: string): "default" | "destructive" | "secondary" {
@@ -79,7 +68,6 @@ export default function UsuariosPage() {
   }, [toast]);
   
   const handleEdit = (id: string) => {
-    // router.push(`/dashboard/usuarios/${id}/editar`); // Edição será implementada depois
     toast({ title: "Em breve", description: `Funcionalidade de editar funcionário ${id} será implementada.`});
   }
 
@@ -132,7 +120,7 @@ export default function UsuariosPage() {
         <CardHeader>
           <CardTitle>Equipe Cadastrada</CardTitle>
           <CardDescription>
-            Lista de funcionários e seus perfis.
+            Lista de funcionários e suas funções.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -152,7 +140,7 @@ export default function UsuariosPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Perfil</TableHead>
+                  <TableHead>Função</TableHead> {/* Alterado de Perfil para Função */}
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -162,9 +150,7 @@ export default function UsuariosPage() {
                   funcionarios.map((func) => (
                     <TableRow key={func.id}>
                       <TableCell className="font-medium">{func.nome}</TableCell>
-                      <TableCell>
-                        <Badge variant={getPerfilBadgeVariant(func.perfil)}>{func.perfil}</Badge>
-                      </TableCell>
+                      <TableCell>{func.funcao}</TableCell> {/* Exibir texto da funcao */}
                       <TableCell>
                         <Badge 
                             variant={getStatusBadgeVariant(func.status)}
