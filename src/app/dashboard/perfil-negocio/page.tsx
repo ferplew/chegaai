@@ -118,8 +118,7 @@ export default function PerfilNegocioPage() {
     fetchData();
   }, [toast]);
 
-  const handleAdminPasswordSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const attemptUnlockSensitiveData = () => {
     if (adminPasswordInput === ADMIN_PASSWORD) {
       setIsSensitiveDataUnlocked(true);
       setAuthError(null);
@@ -208,7 +207,7 @@ export default function PerfilNegocioPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {!isSensitiveDataUnlocked ? (
-            <form onSubmit={handleAdminPasswordSubmit} className="space-y-4 p-4 border rounded-md bg-muted/50">
+            <div className="space-y-4 p-4 border rounded-md bg-muted/50">
               <Label htmlFor="adminPasswordUnlock" className="font-semibold">Desbloquear Edição</Label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-grow">
@@ -219,6 +218,7 @@ export default function PerfilNegocioPage() {
                     onChange={(e) => { setAdminPasswordInput(e.target.value); setAuthError(null); }}
                     placeholder="Senha de Administrador"
                     className={authError ? "border-destructive" : ""}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); attemptUnlockSensitiveData(); }}}
                   />
                   <Button
                     type="button"
@@ -231,12 +231,12 @@ export default function PerfilNegocioPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                <Button type="submit" variant="secondary">
+                <Button type="button" onClick={attemptUnlockSensitiveData} variant="secondary">
                     <Lock className="mr-2 h-4 w-4"/> Desbloquear
                 </Button>
               </div>
               {authError && <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-4 w-4"/> {authError}</p>}
-            </form>
+            </div>
           ) : (
             <>
               <div className="space-y-1">
