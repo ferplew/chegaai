@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -61,7 +62,7 @@ export function DashboardSidebar() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.label}>
-              <Link href={item.href} passHref legacyBehavior>
+              <Link href={item.href}>
                 <SidebarMenuButton
                   isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
                   tooltip={{ children: item.label, side: 'right', hidden: state === 'expanded' || isMobile }}
