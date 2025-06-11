@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "chega-ai-v1-service"
+location: "southamerica-east1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "chega-ai-v1-database"
+      cloudSql:
+        instanceId: "chega-ai-v1-instance"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

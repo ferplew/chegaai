@@ -8,7 +8,7 @@ import { getFirestore, type Firestore } from "firebase/firestore"; // Adicionado
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBvuYtZSWxyjm5ss4y8sNRbH1J3bjRDXMw",
-  authDomain: "chega-ai-v1.firebaseapp.com",
+  authDomain: "chegaai.delivery", // Atualizado para o domínio personalizado
   projectId: "chega-ai-v1",
   storageBucket: "chega-ai-v1.firebasestorage.app",
   messagingSenderId: "1041249778153",
