@@ -1,9 +1,9 @@
 
 'use server';
 /**
- * @fileOverview A Genkit flow to suggest item titles based on keywords.
+ * @fileOverview A Genkit flow to suggest item titles and descriptions based on keywords.
  *
- * - suggestItemDetails - A function that handles the item title suggestion. (Name kept for now to minimize changes in calling code, but functionality changed)
+ * - suggestItemDetails - A function that handles the item detail suggestion.
  * - SuggestItemDetailsInput - The input type for the suggestItemDetails function.
  * - SuggestItemDetailsOutput - The return type for the suggestItemDetails function.
  */
@@ -18,23 +18,24 @@ export type SuggestItemDetailsInput = z.infer<typeof SuggestItemDetailsInputSche
 
 const SuggestItemDetailsOutputSchema = z.object({
   suggestedTitles: z.array(z.string()).optional().describe('Up to three catchy and descriptive title suggestions for the item.'),
+  suggestedDescriptions: z.array(z.string()).optional().describe('Up to three compelling description suggestions for the item, based on the keywords.'),
 });
 export type SuggestItemDetailsOutput = z.infer<typeof SuggestItemDetailsOutputSchema>;
 
 export async function suggestItemDetails(input: SuggestItemDetailsInput): Promise<SuggestItemDetailsOutput> {
-  return suggestItemTitlesFlow(input);
+  return suggestItemDetailsFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'suggestItemTitlesPrompt',
+  name: 'suggestItemDetailsPrompt',
   input: { schema: SuggestItemDetailsInputSchema },
   output: { schema: SuggestItemDetailsOutputSchema },
-  prompt: `You are an expert restaurant menu consultant. Based on the following keywords, suggest three compelling and distinct title options for a new menu item.
+  prompt: `You are an expert restaurant menu consultant. Based on the following keywords, suggest three compelling and distinct title options AND three distinct, appetizing description options for a new menu item.
 
 Keywords: {{{keywords}}}
 
-Focus on creating appetizing and clear title suggestions.
-Return the response in the specified JSON format with only the 'suggestedTitles' field.
+Focus on creating appetizing and clear title suggestions, and relatively concise descriptions that highlight key features or ingredients implied by the keywords.
+Return the response in the specified JSON format with 'suggestedTitles' and 'suggestedDescriptions' fields.
 If the keywords are too vague or nonsensical for a food item, you can return empty or minimal suggestions.
 
 For example, for "pizza calabresa grande queijo", you might suggest:
@@ -43,14 +44,19 @@ For example, for "pizza calabresa grande queijo", you might suggest:
     "Calabresa Suprema Gigante",
     "Pizza de Calabresa Artesanal com Queijo Extra",
     "A Clássica Calabresa com Borda Crocante"
+  ],
+  "suggestedDescriptions": [
+    "Uma explosão de sabor com nossa generosa pizza de calabresa defumada, fatias suculentas sobre uma camada de queijo mussarela derretido e molho de tomate artesanal. Ideal para compartilhar!",
+    "Experimente a combinação perfeita de calabresa selecionada, queijo derretido no ponto e nosso molho especial sobre uma massa crocante. Uma experiência única para os amantes de calabresa!",
+    "Nossa pizza de calabresa tamanho família é perfeita para matar a fome. Ingredientes frescos e massa crocante, direto do forno para sua mesa, com o toque especial da casa."
   ]
 }
 `,
 });
 
-const suggestItemTitlesFlow = ai.defineFlow(
+const suggestItemDetailsFlow = ai.defineFlow(
   {
-    name: 'suggestItemTitlesFlow', // Renamed flow for clarity
+    name: 'suggestItemDetailsFlow',
     inputSchema: SuggestItemDetailsInputSchema,
     outputSchema: SuggestItemDetailsOutputSchema,
   },
@@ -58,20 +64,22 @@ const suggestItemTitlesFlow = ai.defineFlow(
     try {
       const { output } = await prompt(input);
       if (!output) {
-        console.warn("AI title suggestion returned null/undefined output for keywords:", input.keywords);
+        console.warn("AI title/description suggestion returned null/undefined output for keywords:", input.keywords);
         return {
-          suggestedTitles: [`Item de ${input.keywords}`]
+          suggestedTitles: [`Item de ${input.keywords}`],
+          suggestedDescriptions: [`Descrição para ${input.keywords}.`]
         };
       }
       return {
         suggestedTitles: output.suggestedTitles || [],
+        suggestedDescriptions: output.suggestedDescriptions || [],
       };
     } catch (error) {
-      console.error("Error in suggestItemTitlesFlow for keywords:", input.keywords, error);
+      console.error("Error in suggestItemDetailsFlow for keywords:", input.keywords, error);
        return {
-          suggestedTitles: [`Erro ao sugerir títulos para ${input.keywords}`]
+          suggestedTitles: [`Erro ao sugerir títulos para ${input.keywords}`],
+          suggestedDescriptions: [`Erro ao sugerir descrições para ${input.keywords}`]
         };
     }
   }
 );
-
