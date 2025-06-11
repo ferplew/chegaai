@@ -72,8 +72,7 @@ export default function ClientesPage() {
   };
   
   const handleEdit = (id: string) => {
-    // router.push(`/dashboard/cadastros/clientes/${id}/editar`); // Implementar página de edição
-    toast({ title: "Em breve", description: `A funcionalidade de editar cliente ${id} será implementada.`});
+    router.push(`/dashboard/cadastros/clientes/${id}/editar`);
   }
 
   const handleOpenDeleteDialog = (cliente: Cliente) => {
