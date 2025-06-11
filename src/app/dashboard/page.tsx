@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; // Adicionado React aqui
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,9 +24,6 @@ const chartConfig = {
   pedidos: { label: "Pedidos", color: "hsl(var(--primary))" },
 };
 
-// No more mock recent orders
-// const recentOrders = []; 
-
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
     case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
@@ -38,7 +35,7 @@ function getStatusBadgeClass(status: string): string {
 }
 
 
-export default function DashboardPage() {
+function OriginalDashboardPage() {
   const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
   const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
   // Placeholder for actual recent orders data - should be fetched
@@ -230,4 +227,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+const DashboardPage = React.memo(OriginalDashboardPage);
+export default DashboardPage;
     

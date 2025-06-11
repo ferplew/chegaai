@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent, useEffect } from 'react';
+import React, { useState, type FormEvent, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -26,7 +26,7 @@ interface Adicional {
   valor: number | '';
 }
 
-export default function NovoItemPage() {
+function OriginalNovoItemPage() {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -548,4 +548,7 @@ export default function NovoItemPage() {
     </div>
   );
 }
+
+const NovoItemPage = React.memo(OriginalNovoItemPage);
+export default NovoItemPage;
 

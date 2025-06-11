@@ -48,7 +48,7 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
-export default function PedidosPage() {
+function OriginalPedidosPage() {
   const [pedidos, setPedidos] = React.useState<Pedido[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -279,3 +279,6 @@ export default function PedidosPage() {
     </div>
   );
 }
+
+const PedidosPage = React.memo(OriginalPedidosPage);
+export default PedidosPage;
