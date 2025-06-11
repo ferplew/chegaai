@@ -1,4 +1,6 @@
 
+"use client"; // Necessário para useState e useEffect
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +11,8 @@ import {
   Package, BarChart3, History, MonitorSmartphone, Users, Lock, SunMoon,
   Sparkles, Cloud, RefreshCw, BadgePercent, MinusCircle, LayoutGrid, Calculator, TrendingUp, Clock, UserPlus, PlusCircle, LayoutDashboard
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { cn } from "@/lib/utils";
 
 const features = [
   { icon: <Package className="w-8 h-8 text-primary" />, title: "Cadastro e controle de pedidos", description: "Gerencie todos os seus pedidos de forma simples e organizada." },
@@ -43,16 +47,36 @@ const steps = [
 ];
 
 export default function LandingPage() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Call on mount to check initial scroll position
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="py-6 fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <ChegaAiLogo className="h-10 text-primary" />
-          <nav className="space-x-4">
-            <Button variant="ghost" asChild><Link href="#funcionalidades">Funcionalidades</Link></Button>
-            <Button variant="ghost" asChild><Link href="#diferenciais">Diferenciais</Link></Button>
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground" asChild><Link href="/login">Acessar Painel</Link></Button>
-          </nav>
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
+        isScrolled ? "py-3 bg-background/95 shadow-lg backdrop-blur-sm" : "py-6 bg-background/80 backdrop-blur-md"
+      )}>
+        <div className="container mx-auto px-4 flex justify-start items-center"> {/* Changed to justify-start */}
+          <Link href="/" aria-label="Página Inicial Chega Aí">
+            <ChegaAiLogo className="h-10 text-primary" />
+          </Link>
+          {/* Navigation removed from here */}
         </div>
       </header>
 
@@ -205,5 +229,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
