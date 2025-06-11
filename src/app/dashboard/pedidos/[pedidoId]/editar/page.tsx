@@ -27,10 +27,10 @@ interface PedidoFormData {
 }
 
 export default function EditarPedidoPage() {
-  const params = useParams();
+  const { pedidoId: rawPedidoId } = useParams();
+  const pedidoId = rawPedidoId as string;
   const router = useRouter();
   const { toast } = useToast();
-  const pedidoId = params.pedidoId as string;
 
   const [formData, setFormData] = useState<PedidoFormData>({
     nomeCliente: '',

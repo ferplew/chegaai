@@ -27,10 +27,10 @@ interface EnderecoFormData {
 }
 
 export default function EditarEnderecoPage() {
-  const params = useParams();
+  const { enderecoId: rawEnderecoId } = useParams();
+  const enderecoId = rawEnderecoId as string;
   const router = useRouter();
   const { toast } = useToast();
-  const enderecoId = params.enderecoId as string;
 
   const [formData, setFormData] = useState<EnderecoFormData>({
     rua: '',
@@ -165,7 +165,7 @@ export default function EditarEnderecoPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline">Editar Endereço</h1>
           <p className="text-muted-foreground">
-            Modificando o endereço ID: <span className="font-semibold text-primary">{enderecoId.substring(0,7)}...</span>
+            Modificando o endereço ID: <span className="font-semibold text-primary">{typeof enderecoId === 'string' ? enderecoId.substring(0,7) : 'N/A'}...</span>
             {formData.clienteNome && ` (Cliente: ${formData.clienteNome})`}
           </p>
         </div>
