@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -10,7 +11,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle, // Added import
+} from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -44,14 +49,14 @@ function useSidebar() {
     console.warn(
       "useSidebar: SidebarContext is not available. Returning default/dummy values. This may indicate an issue with SidebarProvider."
     );
-    // Return a default structure to prevent destructuring errors
+    // Return a default structure to prevent destructuring errors and allow app to run
     return {
       state: "collapsed" as "expanded" | "collapsed",
       open: false,
       setOpen: (() => {}) as (open: boolean | ((open: boolean) => boolean)) => void,
       openMobile: false,
       setOpenMobile: (() => {}) as (open: boolean | ((open: boolean) => boolean)) => void,
-      isMobile: typeof window !== "undefined" ? window.innerWidth < 768 : true, // Best effort for isMobile
+      isMobile: typeof window !== "undefined" ? window.innerWidth < 768 : true, 
       toggleSidebar: () => {},
     };
   }
@@ -218,6 +223,7 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
+            <SheetTitle className="sr-only">Menu Principal</SheetTitle>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
