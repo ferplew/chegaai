@@ -1,14 +1,17 @@
 
 "use client";
 
+import { useEffect, useState } from 'react';
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, DollarSign, Clock, Loader, ArrowUpRight, ExternalLink, PlusCircle } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"; // Removed ResponsiveContainer
-import Link from "next/link";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, onSnapshot, QuerySnapshot, DocumentData } from 'firebase/firestore';
 
 const dailyOrdersData = [
   { hour: "08:00", pedidos: 5 }, { hour: "09:00", pedidos: 8 }, { hour: "10:00", pedidos: 12 },
@@ -28,34 +31,54 @@ const recentOrders = [
   { id: "PED005", product: "Suco de Laranja", status: "Novo", time: "10:08", total: "R$ 8,00" },
 ];
 
-function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
-  switch (status.toLowerCase()) {
-    case "novo": return "default"; 
-    case "em preparo": return "secondary"; 
-    case "pronto": return "outline"; 
-    case "finalizado": return "destructive"; 
-    default: return "default";
-  }
-}
+// function getStatusVariant(status: string): "default" | "secondary" | "outline" | "destructive" {
+//   switch (status.toLowerCase()) {
+//     case "novo": return "default";
+//     case "em preparo": return "secondary";
+//     case "pronto": return "outline";
+//     case "finalizado": return "destructive";
+//     default: return "default";
+//   }
+// }
 
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
-    case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30"; 
-    case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"; 
-    case "pronto": return "bg-primary/20 text-primary border-primary/30"; 
-    case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"; 
+    case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+    case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+    case "pronto": return "bg-primary/20 text-primary border-primary/30";
+    case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
     default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
   }
 }
 
 
 export default function DashboardPage() {
+  const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
+  const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
+
+  useEffect(() => {
+    const pedidosCollectionRef = collection(db, 'pedidos');
+    const q = query(pedidosCollectionRef, where('status', 'in', ['Novo', 'Em preparo']));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
+      setPedidosEmAndamentoCount(querySnapshot.size);
+      setIsLoadingPedidosEmAndamento(false);
+    }, (error) => {
+      console.error("Erro ao buscar pedidos em andamento:", error);
+      setPedidosEmAndamentoCount(0); // Ou algum valor de erro, ou manter null
+      setIsLoadingPedidosEmAndamento(false);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on component unmount
+  }, []);
+
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline">Bem-vindo, Restaurante Exemplo!</h1>
-          <p className="text-muted-foreground">Aqui está um resumo da sua operação hoje.</p>
+          <p className="text-muted-foreground">Aqui está um resumo da sua operação hoje. <span className="text-xs block">(Valores de faturamento, total de pedidos e tempo de preparo são exemplos)</span></p>
         </div>
         <Button asChild>
           <Link href="/dashboard/pedidos/novo">
@@ -98,11 +121,19 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pedidos em Andamento</CardTitle>
-            <Loader className="h-5 w-5 text-primary animate-spin" />
+            {isLoadingPedidosEmAndamento || pedidosEmAndamentoCount === null ? (
+                <Loader className="h-5 w-5 text-primary animate-spin" />
+            ) : (
+                <ShoppingCart className="h-5 w-5 text-primary" /> // Using ShoppingCart as a generic icon here
+            )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">18</div>
-            <p className="text-xs text-muted-foreground">Atualizado agora</p>
+            {isLoadingPedidosEmAndamento || pedidosEmAndamentoCount === null ? (
+              <div className="text-2xl font-bold">-</div>
+            ) : (
+              <div className="text-2xl font-bold">{pedidosEmAndamentoCount}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Atualizado em tempo real</p>
           </CardContent>
         </Card>
       </div>
@@ -110,7 +141,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="col-span-1 md:col-span-2 lg:col-span-1">
           <CardHeader>
-            <CardTitle>Pedidos por Hora</CardTitle>
+            <CardTitle>Pedidos por Hora (Exemplo)</CardTitle>
             <CardDescription>Volume de pedidos ao longo do dia de hoje.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] w-full p-2">
@@ -129,7 +160,7 @@ export default function DashboardPage() {
         <Card className="col-span-1 md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
-              <CardTitle>Últimos Pedidos</CardTitle>
+              <CardTitle>Últimos Pedidos (Exemplo)</CardTitle>
               <CardDescription>
                 Acompanhe os pedidos mais recentes.
               </CardDescription>
@@ -183,3 +214,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
