@@ -1,9 +1,12 @@
 
+"use client"; // Necessário para useToast e interações
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
-import Link from "next/link"; // Import Link
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 // Dados de exemplo para os endereços
 const mockEnderecos = [
@@ -40,6 +43,16 @@ const mockEnderecos = [
 ];
 
 export default function EnderecosPage() {
+  const { toast } = useToast(); // Inicializa o hook useToast
+
+  const handleExcluirClick = (enderecoId: string) => {
+    // TODO: Implementar modal de confirmação e lógica de exclusão
+    toast({
+      title: "Excluir Endereço (Em breve)",
+      description: `A funcionalidade para excluir o endereço ID: ${enderecoId} será implementada.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -48,7 +61,7 @@ export default function EnderecosPage() {
           <p className="text-muted-foreground">Gerencie os endereços de entrega e retirada.</p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/enderecos/novo"> {/* Link to the new page */}
+          <Link href="/dashboard/enderecos/novo">
             <PlusCircle className="mr-2 h-4 w-4" />
             Adicionar Endereço Manualmente
           </Link>
@@ -84,11 +97,18 @@ export default function EnderecosPage() {
                     <TableCell className="hidden md:table-cell">{endereco.cidade}</TableCell>
                     <TableCell className="hidden lg:table-cell">{endereco.cep}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="mr-2">
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
+                      <Button variant="ghost" size="icon" className="mr-2" asChild>
+                        <Link href={`/dashboard/enderecos/${endereco.id}/editar`}>
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Editar</span>
+                        </Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleExcluirClick(endereco.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Excluir</span>
                       </Button>

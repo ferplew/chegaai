@@ -1,0 +1,55 @@
+
+"use client";
+
+import Link from "next/link";
+import { useParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
+
+export default function EditarEnderecoPage() {
+  const params = useParams();
+  const enderecoId = params.enderecoId as string;
+
+  // TODO: Implement form state, fetch address data, and submission logic
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/dashboard/enderecos">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Voltar para Endereços</span>
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold font-headline">Editar Endereço</h1>
+          <p className="text-muted-foreground">
+            Modificando o endereço ID: <span className="font-semibold text-primary">{enderecoId}</span>
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Detalhes do Endereço</CardTitle>
+          <CardDescription>
+            Altere os campos necessários abaixo.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Placeholder for address form fields */}
+          <div className="flex items-center justify-center h-64 border border-dashed rounded-md">
+            <p className="text-muted-foreground">Formulário de edição de endereço em construção.</p>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/enderecos">Cancelar</Link>
+            </Button>
+            <Button type="submit" disabled>Salvar Alterações (Em breve)</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
