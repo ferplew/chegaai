@@ -2,8 +2,10 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,7 +21,9 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { CalendarDays, Download } from "lucide-react";
+import { CalendarDays, Download, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
+
+const ADMIN_PASSWORD = "12345678"; // Senha de administrador temporária
 
 export default function GanhosPage() {
   const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
@@ -27,8 +31,24 @@ export default function GanhosPage() {
     to: endOfDay(new Date()),
   });
   const { toast } = useToast();
-
   const MAX_DATE_RANGE_DAYS = 90;
+
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [passwordInput, setPasswordInput] = React.useState("");
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setAuthError(null);
+      setPasswordInput(""); // Limpa o campo após o login
+    } else {
+      setAuthError("Senha de administrador incorreta. Tente novamente.");
+      setIsAuthenticated(false);
+    }
+  };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     if (range?.from && range?.to) {
@@ -38,10 +58,6 @@ export default function GanhosPage() {
           description: `Por favor, selecione um intervalo de no máximo ${MAX_DATE_RANGE_DAYS} dias.`,
           variant: "destructive",
         });
-        // Optionally, revert to the previous valid range or a default
-        // For now, we'll allow the selection but show the toast.
-        // Or, to prevent selection:
-        // return; 
       }
     }
     setSelectedDateRange(range);
@@ -74,13 +90,67 @@ export default function GanhosPage() {
     return format(range.from, "dd/MM/yy", { locale: ptBR });
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2">
+              <Lock className="h-6 w-6 text-primary" />
+              Acesso Restrito
+            </CardTitle>
+            <CardDescription>
+              Esta seção requer senha de administrador para visualização.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handlePasswordSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="adminPassword">Senha de Administrador</Label>
+                <div className="relative">
+                  <Input
+                    id="adminPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="Digite a senha"
+                    className={authError ? "border-destructive" : ""}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+              </div>
+              {authError && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" /> {authError}
+                </p>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full">Acessar Ganhos</Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline">Ganhos</h1>
           <p className="text-muted-foreground">
-            Visualize seus lucros e total recebido. (🔒 Acesso admin necessário para ver dados reais)
+            Visualize seus lucros e total recebido.
           </p>
         </div>
         <Button variant="outline">
@@ -114,7 +184,6 @@ export default function GanhosPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder para os dados de ganhos */}
       <Card>
         <CardHeader>
           <CardTitle>Resumo dos Ganhos</CardTitle>
