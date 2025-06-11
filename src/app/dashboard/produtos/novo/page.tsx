@@ -1,31 +1,57 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // For image preview
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, DollarSign, Image as ImageIcon, UploadCloud } from "lucide-react";
+import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
+import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
 // import { db } from '@/lib/firebase/config'; // Para o próximo passo
 // import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Para o próximo passo
+
+interface Adicional {
+  id: string; // for unique key in map
+  nome: string;
+  valor: number | '';
+}
 
 export default function NovoItemPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Main form fields
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState<number | ''>('');
   const [categoria, setCategoria] = useState('');
+  
+  // Adicionais
+  const [adicionais, setAdicionais] = useState<Adicional[]>([]);
+  const [novoAdicionalNome, setNovoAdicionalNome] = useState('');
+  const [novoAdicionalValor, setNovoAdicionalValor] = useState<number | ''>('');
+
+  // Image handling
   const [imagemUrl, setImagemUrl] = useState('');
-  // const [imagemArquivo, setImagemArquivo] = useState<File | null>(null); // Para upload de arquivo
-  const [isLoading, setIsLoading] = useState(false);
+  const [imagemArquivo, setImagemArquivo] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+
+  // AI Text Suggestions
+  const [aiKeywords, setAiKeywords] = useState('');
+  const [aiSuggestions, setAiSuggestions] = useState<SuggestItemDetailsOutput | null>(null);
+  const [isLoadingAiText, setIsLoadingAiText] = useState(false);
+
+  // AI Image Generation
+  const [aiGeneratedImage, setAiGeneratedImage] = useState<string | null>(null);
+  const [isLoadingAiImage, setIsLoadingAiImage] = useState(false);
 
   // Placeholder para categorias - será carregado do Firestore depois
   const categoriasMock = [
@@ -33,55 +59,139 @@ export default function NovoItemPage() {
     { id: 'burgers', nome: 'Hambúrgueres' },
     { id: 'bebidas', nome: 'Bebidas' },
     { id: 'sobremesas', nome: 'Sobremesas' },
+    { id: 'porcoes', nome: 'Porções' },
+    { id: 'pratos', nome: 'Pratos Executivos' },
   ];
+
+  useEffect(() => {
+    if (imagemArquivo) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagemPreview(reader.result as string);
+      };
+      reader.readAsDataURL(imagemArquivo);
+      setImagemUrl(''); // Clear URL if file is selected
+      setAiGeneratedImage(null); // Clear AI image if file is selected
+    } else if (imagemUrl) {
+      setImagemPreview(imagemUrl);
+      setAiGeneratedImage(null); // Clear AI image if URL is typed
+    } else if (aiGeneratedImage) {
+      setImagemPreview(aiGeneratedImage);
+    } else {
+      setImagemPreview(null);
+    }
+  }, [imagemUrl, imagemArquivo, aiGeneratedImage]);
+
+
+  const handleSuggestDetails = async () => {
+    if (!aiKeywords.trim()) {
+      toast({ title: "Palavras-chave vazias", description: "Digite algumas palavras-chave para a IA.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingAiText(true);
+    setAiSuggestions(null);
+    try {
+      const result = await suggestItemDetails({ keywords: aiKeywords });
+      setAiSuggestions(result);
+      toast({ title: "Sugestões Geradas!", description: "A IA preparou algumas sugestões para você." });
+    } catch (error) {
+      console.error("Erro ao sugerir detalhes:", error);
+      toast({ title: "Erro da IA", description: "Não foi possível gerar sugestões. Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsLoadingAiText(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!nome.trim()) {
+      toast({ title: "Nome do item vazio", description: "Digite um nome para o item antes de gerar a imagem.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingAiImage(true);
+    setAiGeneratedImage(null);
+    setImagemArquivo(null);
+    setImagemUrl('');
+    try {
+      const result = await generateItemImage({ title: nome });
+      if (result.imageDataUri) {
+        setAiGeneratedImage(result.imageDataUri);
+        setImagemPreview(result.imageDataUri);
+        toast({ title: "Imagem Gerada!", description: "A IA criou uma imagem para seu item." });
+      } else {
+         toast({ title: "Erro da IA", description: "A IA não retornou uma imagem.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Erro ao gerar imagem:", error);
+      toast({ title: "Erro da IA", description: "Não foi possível gerar a imagem. Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsLoadingAiImage(false);
+    }
+  };
+  
+  const handleAddAdicional = () => {
+    if (!novoAdicionalNome.trim()) {
+      toast({ title: "Nome do adicional vazio", variant: "destructive" });
+      return;
+    }
+    if (novoAdicionalValor === '' || Number(novoAdicionalValor) < 0) {
+      toast({ title: "Valor do adicional inválido", variant: "destructive" });
+      return;
+    }
+    setAdicionais([...adicionais, { id: Date.now().toString(), nome: novoAdicionalNome.trim(), valor: Number(novoAdicionalValor) }]);
+    setNovoAdicionalNome('');
+    setNovoAdicionalValor('');
+  };
+
+  const handleRemoveAdicional = (idToRemove: string) => {
+    setAdicionais(adicionais.filter(adicional => adicional.id !== idToRemove));
+  };
+
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsLoading(true);
+    // setIsLoading(true); // Re-enable when Firestore save is active
 
     if (!nome.trim()) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe o nome do item.", variant: "destructive" });
-      setIsLoading(false);
+      // setIsLoading(false);
       return;
     }
     if (valor === '' || Number(valor) <= 0) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe um valor válido para o item.", variant: "destructive" });
-      setIsLoading(false);
+      // setIsLoading(false);
       return;
     }
     if (!categoria) {
         toast({ title: "Campo obrigatório", description: "Por favor, selecione uma categoria.", variant: "destructive" });
-        setIsLoading(false);
+        // setIsLoading(false);
         return;
     }
 
-    // Lógica de salvamento no Firestore virá aqui no próximo passo
-    console.log({
-      nome,
-      descricao,
-      valor,
+    const itemData = {
+      nome: nome.trim(),
+      descricao: descricao.trim(),
+      valor: Number(valor),
       categoria,
-      imagemUrl,
-      // imagemArquivo
-    });
+      adicionais: adicionais.map(({id, ...rest}) => rest), // Remove temporary id
+      imagemUrl: imagemUrl.trim(), // Could be URL from input, or from Storage if file uploaded, or AI data URI
+      imagemArquivoNome: imagemArquivo ? imagemArquivo.name : null, // Keep track of original file name if uploaded
+      aiGeneratedImagePresent: !!aiGeneratedImage, // Flag if AI image was used (data URI would be in imagemUrl if so)
+      // dataCriacao: serverTimestamp(), // Firestore
+    };
 
-    // Simulação de salvamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("Dados do Item para Salvar:", itemData);
 
     toast({
-      title: "Item salvo (simulação)!",
-      description: "O novo item foi configurado. A integração com Firestore virá em breve.",
+      title: "Item Configurado (Simulação)",
+      description: "Os dados do item foram preparados. Verifique o console. Integração com Firestore no próximo passo.",
     });
     
-    // Limpar campos e redirecionar (ou apenas redirecionar)
-    // setNome(''); setDescricao(''); setValor(''); setCategoria(''); setImagemUrl('');
-    router.push('/dashboard/produtos'); 
-
-    setIsLoading(false);
+    // router.push('/dashboard/produtos'); 
+    // setIsLoading(false); // Re-enable
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-12">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
           <Link href="/dashboard/produtos">
@@ -92,17 +202,74 @@ export default function NovoItemPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline">Adicionar Novo Item</h1>
           <p className="text-muted-foreground">
-            Preencha os detalhes do novo item do cardápio.
+            Preencha os detalhes ou use a IA para ajudar.
           </p>
         </div>
       </div>
+
+      {/* AI Text Suggestions Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA para Detalhes</CardTitle>
+          <CardDescription>
+            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir título, descrição e adicionais.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              id="aiKeywords"
+              placeholder="Ex: burger artesanal bacon cheddar"
+              value={aiKeywords}
+              onChange={(e) => setAiKeywords(e.target.value)}
+              className="flex-grow"
+            />
+            <Button onClick={handleSuggestDetails} disabled={isLoadingAiText} className="w-full sm:w-auto">
+              {isLoadingAiText ? <Loader2 className="animate-spin" /> : <Wand2 />}
+              Sugerir Detalhes
+            </Button>
+          </div>
+          {aiSuggestions && (
+            <div className="space-y-3 p-4 border rounded-md bg-muted/30">
+              {aiSuggestions.suggestedTitle && (
+                <div>
+                  <Label className="font-semibold">Título Sugerido:</Label>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm">{aiSuggestions.suggestedTitle}</p>
+                    <Button size="sm" variant="outline" onClick={() => setNome(aiSuggestions.suggestedTitle!)}>Usar</Button>
+                  </div>
+                </div>
+              )}
+              {aiSuggestions.suggestedDescription && (
+                <div>
+                  <Label className="font-semibold">Descrição Sugerida:</Label>
+                   <div className="flex justify-between items-start">
+                    <p className="text-sm whitespace-pre-line">{aiSuggestions.suggestedDescription}</p>
+                    <Button size="sm" variant="outline" onClick={() => setDescricao(aiSuggestions.suggestedDescription!)} className="ml-2 flex-shrink-0">Usar</Button>
+                  </div>
+                </div>
+              )}
+              {aiSuggestions.suggestedAdditionals && aiSuggestions.suggestedAdditionals.length > 0 && (
+                <div>
+                  <Label className="font-semibold">Nomes de Adicionais Sugeridos:</Label>
+                  <ul className="list-disc list-inside text-sm space-y-1 pl-1">
+                    {aiSuggestions.suggestedAdditionals.map((ad, index) => (
+                      <li key={index}>{ad} (você pode adicionar o preço abaixo)</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
             <CardTitle>Detalhes do Item</CardTitle>
             <CardDescription>
-              Informações básicas, preço e imagem do item.
+              Preencha as informações básicas, preço e imagem do item.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -130,7 +297,7 @@ export default function NovoItemPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="valor">Valor (R$) <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="valor">Valor Base (R$) <span className="text-destructive">*</span></Label>
                     <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -156,62 +323,130 @@ export default function NovoItemPage() {
                             {categoriasMock.map(cat => (
                                 <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
                             ))}
-                            <SelectItem value="outra">Outra (Adicionar nova)</SelectItem>
+                            {/* <SelectItem value="outra">Outra (Adicionar nova)</SelectItem> */}
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="imagemUrl">URL da Imagem</Label>
-                <div className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                    <Input
-                        id="imagemUrl"
-                        type="url"
-                        placeholder="https://exemplo.com/imagem.png"
-                        value={imagemUrl}
-                        onChange={(e) => setImagemUrl(e.target.value)}
-                    />
+            {/* Adicionais Section */}
+            <div className="space-y-4 p-4 border rounded-md">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <PlusCircle className="h-5 w-5 text-primary"/>
+                Adicionais do Item
+              </h3>
+              <p className="text-xs text-muted-foreground -mt-3">
+                Ex: Borda recheada, Queijo extra, Bacon. Deixe em branco se não houver.
+              </p>
+              <div className="space-y-2">
+                {adicionais.map((adicional) => (
+                  <div key={adicional.id} className="flex items-center gap-2 p-2 border rounded-md bg-muted/20">
+                    <span className="flex-grow text-sm">{adicional.nome} - R$ {Number(adicional.valor).toFixed(2)}</span>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveAdicional(adicional.id)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 items-end">
+                <div className="flex-grow space-y-1">
+                  <Label htmlFor="novoAdicionalNome" className="text-xs">Nome do Adicional</Label>
+                  <Input id="novoAdicionalNome" value={novoAdicionalNome} onChange={(e) => setNovoAdicionalNome(e.target.value)} placeholder="Ex: Cheddar Extra"/>
                 </div>
-                <p className="text-xs text-muted-foreground">Ou faça upload abaixo (funcionalidade em breve).</p>
+                <div className="w-full sm:w-32 space-y-1">
+                  <Label htmlFor="novoAdicionalValor" className="text-xs">Valor (R$)</Label>
+                  <Input id="novoAdicionalValor" type="number" value={novoAdicionalValor} onChange={(e) => setNovoAdicionalValor(e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="Ex: 3.50" min="0" step="0.01" />
+                </div>
+                <Button type="button" variant="outline" onClick={handleAddAdicional} className="w-full sm:w-auto">Adicionar</Button>
+              </div>
             </div>
 
-            {/* Placeholder para Upload de Imagem */}
-            <div className="space-y-2">
-                <Label htmlFor="imagemArquivo">Upload de Imagem (em breve)</Label>
-                <div className="flex items-center justify-center w-full">
-                    <Label
-                        htmlFor="imagemArquivoInput"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/75"
-                    >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <UploadCloud className="w-10 h-10 mb-3 text-muted-foreground" />
-                        <p className="mb-2 text-sm text-muted-foreground">
-                            <span className="font-semibold">Clique para enviar</span> ou arraste e solte
-                        </p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, WEBP (MAX. 800x400px)</p>
+
+            {/* Image Section */}
+            <div className="space-y-4 p-4 border rounded-md">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-primary"/>
+                    Imagem do Item
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="imagemUrl">URL da Imagem</Label>
+                            <Input
+                                id="imagemUrl"
+                                type="url"
+                                placeholder="https://exemplo.com/imagem.png"
+                                value={imagemUrl}
+                                onChange={(e) => { setImagemUrl(e.target.value); setImagemArquivo(null); setAiGeneratedImage(null); }}
+                            />
                         </div>
-                        <Input id="imagemArquivoInput" type="file" className="hidden" disabled />
-                    </Label>
+                         <div className="text-center text-sm text-muted-foreground my-2">OU</div>
+                        <div className="space-y-2">
+                            <Label htmlFor="imagemArquivo">Upload de Imagem (Max 2MB)</Label>
+                             <Input 
+                                id="imagemArquivo" 
+                                type="file" 
+                                accept="image/png, image/jpeg, image/webp"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                                        toast({ title: "Arquivo muito grande", description: "Selecione uma imagem menor que 2MB.", variant: "destructive"});
+                                        setImagemArquivo(null);
+                                      } else {
+                                        setImagemArquivo(file);
+                                        setImagemUrl('');
+                                        setAiGeneratedImage(null);
+                                      }
+                                    }
+                                }}
+                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                            />
+                        </div>
+                        <div className="text-center text-sm text-muted-foreground my-2">OU</div>
+                         <Button onClick={handleGenerateImage} disabled={isLoadingAiImage || !nome.trim()} className="w-full">
+                            {isLoadingAiImage ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                            Gerar Imagem com IA (usando o nome do item)
+                        </Button>
+                        {isLoadingAiImage && <p className="text-xs text-muted-foreground text-center">A IA está criando, pode levar alguns segundos...</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <Label>Pré-visualização</Label>
+                        <div className="h-48 w-full rounded-md border border-dashed bg-muted/30 flex items-center justify-center overflow-hidden">
+                            {imagemPreview ? (
+                                <Image src={imagemPreview} alt="Pré-visualização" width={200} height={192} className="object-contain max-h-full max-w-full" />
+                            ) : (
+                                <div className="text-center text-muted-foreground p-4">
+                                    <ImageIcon className="mx-auto h-12 w-12 mb-2" />
+                                    <p className="text-xs">Nenhuma imagem selecionada, fornecida ou gerada.</p>
+                                </div>
+                            )}
+                        </div>
+                        {aiGeneratedImage && imagemPreview === aiGeneratedImage && (
+                             <p className="text-xs text-primary text-center flex items-center justify-center gap-1"><Info className="h-3 w-3"/> Imagem gerada pela IA. Você pode substituí-la.</p>
+                        )}
+                    </div>
                 </div>
             </div>
+
 
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
             <div className="flex justify-end gap-2 w-full">
-                <Button variant="outline" asChild type="button" disabled={isLoading}>
+                <Button variant="outline" asChild type="button" /*disabled={isLoading}*/>
                     <Link href="/dashboard/produtos">Cancelar</Link>
                 </Button>
-                <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
+                <Button type="submit" /*disabled={isLoading}*/>
+                    {/* {isLoading ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Salvando...
                     </>
                     ) : (
                     "Salvar Item"
-                    )}
+                    )} */}
+                    Salvar Item (Simulação)
                 </Button>
             </div>
           </CardFooter>
@@ -220,3 +455,6 @@ export default function NovoItemPage() {
     </div>
   );
 }
+
+
+    
