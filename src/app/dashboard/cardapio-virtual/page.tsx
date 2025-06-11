@@ -1,19 +1,22 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, ExternalLink, QrCode, Info, LayoutList } from "lucide-react";
+import { Copy, ExternalLink, QrCode, Info, LayoutList, Download, RefreshCw, Loader2 } from "lucide-react";
+import { QRCodeCanvas } from 'qrcode.react';
 
 export default function CardapioVirtualPage() {
   const { toast } = useToast();
-  // TODO: Substituir por dados reais do perfil do negócio (quando implementado)
-  const [restaurantSlug, setRestaurantSlug] = useState("meu-restaurante-exemplo"); 
+  const [restaurantSlug, setRestaurantSlug] = useState("meu-restaurante-exemplo");
   const [publicLink, setPublicLink] = useState("");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const qrCanvasRef = useRef<HTMLDivElement>(null); // Ref for the canvas container
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -32,6 +35,40 @@ export default function CardapioVirtualPage() {
           toast({ title: "Erro ao copiar", description: "Não foi possível copiar o link.", variant: "destructive" });
           console.error('Erro ao copiar link: ', err);
         });
+    }
+  };
+
+  const generateQRCode = () => {
+    if (!publicLink) {
+      toast({ title: "Erro", description: "Link público não está disponível para gerar QR Code.", variant: "destructive"});
+      return;
+    }
+    setIsGeneratingQr(true);
+    // Use a timeout to ensure the canvas is rendered before converting to data URL
+    setTimeout(() => {
+      const canvasElement = qrCanvasRef.current?.querySelector('canvas');
+      if (canvasElement) {
+        const dataUrl = canvasElement.toDataURL('image/png');
+        setQrCodeDataUrl(dataUrl);
+        toast({ title: "QR Code Gerado!", description: "O QR Code para seu cardápio está pronto." });
+      } else {
+        toast({ title: "Erro ao gerar QR Code", description: "Não foi possível encontrar o canvas do QR Code.", variant: "destructive"});
+      }
+      setIsGeneratingQr(false);
+    }, 100); // Small delay to allow canvas to render
+  };
+
+  const downloadQRCode = () => {
+    if (qrCodeDataUrl) {
+      const link = document.createElement('a');
+      link.href = qrCodeDataUrl;
+      link.download = `qrcode-cardapio-${restaurantSlug}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Download Iniciado", description: "O QR Code está sendo baixado."});
+    } else {
+      toast({ title: "QR Code não gerado", description: "Gere o QR Code antes de tentar baixá-lo.", variant: "destructive"});
     }
   };
 
@@ -81,14 +118,41 @@ export default function CardapioVirtualPage() {
             <CardTitle className="flex items-center gap-2"><QrCode className="h-5 w-5 text-primary"/> QR Code do Cardápio</CardTitle>
             <CardDescription>Permita que seus clientes acessem o cardápio escaneando o QR Code.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-48 border-2 border-dashed border-muted rounded-lg bg-muted/30">
-              <div className="text-center text-muted-foreground">
-                <QrCode className="mx-auto h-12 w-12 mb-2" />
-                <p>Geração de QR Code em breve.</p>
-              </div>
+          <CardContent className="space-y-4">
+            {/* Hidden canvas for qrcode.react to render into */}
+            <div ref={qrCanvasRef} className="hidden">
+              {publicLink && <QRCodeCanvas value={publicLink} size={256} level="H" includeMargin={true} />}
             </div>
-            <Button className="mt-4 w-full" disabled>Gerar/Baixar QR Code</Button>
+
+            {qrCodeDataUrl ? (
+              <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-primary rounded-lg bg-muted/30">
+                <img src={qrCodeDataUrl} alt="QR Code do Cardápio" className="w-48 h-48 rounded-md shadow-md" />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-52 border-2 border-dashed border-muted rounded-lg bg-muted/30">
+                <div className="text-center text-muted-foreground">
+                  <QrCode className="mx-auto h-12 w-12 mb-2" />
+                  <p>Clique em "Gerar QR Code" abaixo.</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+                <Button onClick={generateQRCode} className="w-full" disabled={isGeneratingQr || !publicLink}>
+                {isGeneratingQr ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                {qrCodeDataUrl ? "Gerar Novamente" : "Gerar QR Code"}
+                </Button>
+                {qrCodeDataUrl && (
+                <Button onClick={downloadQRCode} variant="outline" className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    Baixar QR Code
+                </Button>
+                )}
+            </div>
           </CardContent>
         </Card>
 
