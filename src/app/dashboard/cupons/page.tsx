@@ -4,10 +4,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, Ticket } from "lucide-react";
-// import Link from "next/link"; // Para "Criar Novo Cupom" se for uma nova página
+import Link from "next/link"; // Para "Criar Novo Cupom" se for uma nova página
 
 export default function CuponsPage() {
-  // TODO: Estado para gerenciar modal de criação de cupom
+  // TODO: Estado para gerenciar modal de criação de cupom (se for modal)
   // TODO: Estado para listar cupons
 
   return (
@@ -17,15 +17,11 @@ export default function CuponsPage() {
           <h1 className="text-3xl font-bold font-headline">Cupons Promocionais</h1>
           <p className="text-muted-foreground">Crie e gerencie seus cupons de desconto.</p>
         </div>
-        <Button
-          onClick={() => {
-            // TODO: Abrir modal de criação de cupom
-            // Por enquanto, um alerta simples:
-            alert("A funcionalidade 'Criar Novo Cupom' será implementada em breve!");
-          }}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Criar Novo Cupom
+        <Button asChild>
+          <Link href="/dashboard/cupons/novo">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Criar Novo Cupom
+          </Link>
         </Button>
       </div>
 
