@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
-import { ArrowLeft, Loader2, DollarSign } from "lucide-react";
+import { ArrowLeft, Loader2, DollarSign, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
@@ -22,10 +22,36 @@ export default function NovoPedidoPage() {
   const [valorTotal, setValorTotal] = useState<number | ''>('');
   const [formaPagamento, setFormaPagamento] = useState('');
   const [observacoes, setObservacoes] = useState('');
+
+  // Campos de endereço
+  const [enderecoRua, setEnderecoRua] = useState('');
+  const [enderecoNumero, setEnderecoNumero] = useState('');
+  const [enderecoBairro, setEnderecoBairro] = useState('');
+  const [enderecoCidade, setEnderecoCidade] = useState('');
+  const [enderecoCep, setEnderecoCep] = useState('');
+  const [enderecoComplemento, setEnderecoComplemento] = useState('');
+  const [enderecoReferencia, setEnderecoReferencia] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
+
+  const resetForm = () => {
+    setNomeCliente('');
+    setTelefoneCliente('');
+    setItensPedido('');
+    setValorTotal('');
+    setFormaPagamento('');
+    setObservacoes('');
+    setEnderecoRua('');
+    setEnderecoNumero('');
+    setEnderecoBairro('');
+    setEnderecoCidade('');
+    setEnderecoCep('');
+    setEnderecoComplemento('');
+    setEnderecoReferencia('');
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,7 +67,7 @@ export default function NovoPedidoPage() {
       setIsLoading(false);
       return;
     }
-    if (valorTotal === '' || valorTotal <= 0) {
+    if (valorTotal === '' || Number(valorTotal) <= 0) {
       toast({ title: "Campo obrigatório", description: "Por favor, informe um valor total válido.", variant: "destructive" });
       setIsLoading(false);
       return;
@@ -54,7 +80,7 @@ export default function NovoPedidoPage() {
 
     try {
       const pedidosCollectionRef = collection(db, 'pedidos');
-      await addDoc(pedidosCollectionRef, {
+      const pedidoDocRef = await addDoc(pedidosCollectionRef, {
         nomeCliente: nomeCliente.trim(),
         telefoneCliente: telefoneCliente.trim(),
         itensPedido: itensPedido.trim(),
@@ -63,7 +89,16 @@ export default function NovoPedidoPage() {
         observacoes: observacoes.trim(),
         status: "Novo", 
         dataCriacao: serverTimestamp(),
-        // TODO: Adicionar campos como enderecoId, userId, etc. futuramente
+        // Campos de endereço podem ser associados ao pedido se necessário
+        endereco: (enderecoRua.trim() && enderecoCidade.trim() && enderecoCep.trim()) ? {
+            rua: enderecoRua.trim(),
+            numero: enderecoNumero.trim(),
+            bairro: enderecoBairro.trim(),
+            cidade: enderecoCidade.trim(),
+            cep: enderecoCep.trim(),
+            complemento: enderecoComplemento.trim(),
+            referencia: enderecoReferencia.trim(),
+        } : null,
       });
 
       toast({
@@ -71,20 +106,44 @@ export default function NovoPedidoPage() {
         description: "O novo pedido foi salvo com sucesso no Firestore.",
       });
       
-      // Limpar formulário
-      setNomeCliente('');
-      setTelefoneCliente('');
-      setItensPedido('');
-      setValorTotal('');
-      setFormaPagamento('');
-      setObservacoes('');
+      // Salvar endereço automaticamente se preenchido
+      if (enderecoRua.trim() && enderecoCidade.trim() && enderecoCep.trim()) {
+        try {
+          const enderecosCollectionRef = collection(db, 'enderecos');
+          await addDoc(enderecosCollectionRef, {
+            rua: enderecoRua.trim(),
+            numero: enderecoNumero.trim(),
+            bairro: enderecoBairro.trim(),
+            cidade: enderecoCidade.trim(),
+            cep: enderecoCep.trim(),
+            complemento: enderecoComplemento.trim(),
+            referencia: enderecoReferencia.trim(),
+            pedidoId: pedidoDocRef.id, // Opcional: vincular ao pedido
+            clienteNome: nomeCliente.trim(), // Opcional: vincular ao cliente
+            dataCriacao: serverTimestamp(),
+          });
+          toast({
+            title: "Endereço salvo!",
+            description: "O endereço de entrega foi registrado automaticamente.",
+            variant: "default",
+          });
+        } catch (addressError) {
+          console.error("Erro ao salvar endereço: ", addressError);
+          toast({
+            title: "Erro ao salvar endereço",
+            description: "Não foi possível registrar o endereço automaticamente. Verifique o console.",
+            variant: "destructive",
+          });
+        }
+      }
       
+      resetForm();
       router.push('/dashboard/pedidos'); 
 
     } catch (error) {
       console.error("Erro ao salvar pedido: ", error);
       toast({
-        title: "Erro ao salvar",
+        title: "Erro ao salvar pedido",
         description: "Não foi possível criar o pedido. Verifique o console para mais detalhes.",
         variant: "destructive",
       });
@@ -177,7 +236,7 @@ export default function NovoPedidoPage() {
                 </div>
                 <div className="space-y-2">
                 <Label htmlFor="formaPagamento">Forma de Pagamento <span className="text-destructive">*</span></Label>
-                <Select value={formaPagamento} onValueChange={setFormaPagamento} required>
+                <Select value={formaPagamento} onValueChange={setFormaPagamento} name="formaPagamento" required>
                     <SelectTrigger id="formaPagamento">
                     <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -202,6 +261,52 @@ export default function NovoPedidoPage() {
                 rows={3}
               />
             </div>
+
+            {/* Seção de Endereço de Entrega */}
+            <Card className="pt-4 mt-6 border-dashed">
+                <CardHeader className="py-0 pb-4">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        Endereço de Entrega (Opcional)
+                    </CardTitle>
+                    <CardDescription>Preencha se o pedido for para entrega.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1 md:col-span-2">
+                            <Label htmlFor="enderecoRua">Rua / Avenida</Label>
+                            <Input id="enderecoRua" value={enderecoRua} onChange={(e) => setEnderecoRua(e.target.value)} placeholder="Ex: Rua das Palmeiras" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="enderecoNumero">Número</Label>
+                            <Input id="enderecoNumero" value={enderecoNumero} onChange={(e) => setEnderecoNumero(e.target.value)} placeholder="Ex: 123" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="enderecoBairro">Bairro</Label>
+                            <Input id="enderecoBairro" value={enderecoBairro} onChange={(e) => setEnderecoBairro(e.target.value)} placeholder="Ex: Centro" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="enderecoCep">CEP</Label>
+                            <Input id="enderecoCep" value={enderecoCep} onChange={(e) => setEnderecoCep(e.target.value)} placeholder="Ex: 12345-678" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="enderecoCidade">Cidade</Label>
+                            <Input id="enderecoCidade" value={enderecoCidade} onChange={(e) => setEnderecoCidade(e.target.value)} placeholder="Ex: Cidade Exemplo" />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="enderecoComplemento">Complemento</Label>
+                        <Input id="enderecoComplemento" value={enderecoComplemento} onChange={(e) => setEnderecoComplemento(e.target.value)} placeholder="Ex: Apto 101, Bloco B" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="enderecoReferencia">Ponto de Referência</Label>
+                        <Textarea id="enderecoReferencia" value={enderecoReferencia} onChange={(e) => setEnderecoReferencia(e.target.value)} placeholder="Ex: Próximo ao mercado, portão verde" rows={2} />
+                    </div>
+                </CardContent>
+            </Card>
+
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
             <div className="flex justify-end gap-2 w-full">
