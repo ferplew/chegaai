@@ -11,8 +11,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sun, Moon, Laptop, ImagePlus, PaletteIcon, Loader2, Save, UploadCloud, Trash2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db, storage } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { doc, getDoc, setDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, type StorageError } from 'firebase/storage';
 import Image from 'next/image';
 
 interface TemaCustomData {
@@ -72,7 +72,8 @@ export default function TemaPage() {
           applyCustomColor(defaultPrimaryHSL); // Apply default if no custom theme saved
         }
       } catch (error) {
-        console.error("Erro ao buscar tema customizado:", error);
+        const firestoreError = error as FirebaseError;
+        console.error("Erro ao buscar tema customizado:", firestoreError);
         toast({ title: "Erro ao carregar tema", variant: "destructive" });
         applyCustomColor(defaultPrimaryHSL); // Apply default on error
       } finally {
@@ -111,7 +112,7 @@ export default function TemaPage() {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setUploadProgress(prev => ({ ...prev, [path]: progress }));
         },
-        (error) => {
+        (error: StorageError) => {
           console.error(`Erro no upload (${path}):`, error);
           toast({ title: `Erro no Upload (${path})`, description: error.message, variant: "destructive" });
           setUploadProgress(prev => ({ ...prev, [path]: 0}));
@@ -152,7 +153,8 @@ export default function TemaPage() {
       applyCustomColor(dataToSave.corPrincipalHSL); // Apply new color immediately
       toast({ title: "Tema Salvo!", description: "Suas personalizações foram aplicadas." });
     } catch (error) {
-      console.error("Erro ao salvar tema:", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar tema:", firestoreError);
       toast({ title: "Erro ao Salvar Tema", variant: "destructive" });
     } finally {
       setIsSaving(false);
@@ -165,11 +167,12 @@ export default function TemaPage() {
       try {
         const imageRef = storageRef(storage, currentUrl); // Assumes URL is from Firebase Storage
         await deleteObject(imageRef);
-      } catch (error: any) {
+      } catch (error) {
+        const storageError = error as StorageError;
         // If deletion from storage fails (e.g. not a storage URL, or permissions), 
         // still proceed to clear it from Firestore.
-        if (error.code !== 'storage/object-not-found') {
-            console.warn(`Falha ao remover imagem do Storage (${type}):`, error);
+        if (storageError.code !== 'storage/object-not-found') {
+            console.warn(`Falha ao remover imagem do Storage (${type}):`, storageError);
             toast({title: "Aviso", description: `Não foi possível remover a imagem antiga do armazenamento, mas será removida do perfil.`, variant:"default"});
         }
       }
@@ -299,5 +302,4 @@ export default function TemaPage() {
     </div>
   );
 }
-
     

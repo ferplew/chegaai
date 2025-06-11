@@ -17,8 +17,8 @@ import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/su
 import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
 
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref as storageRef, uploadString, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { ref as storageRef, uploadString, uploadBytesResumable, getDownloadURL, type StorageError } from 'firebase/storage';
 
 interface Adicional {
   id: string; 
@@ -186,7 +186,8 @@ function OriginalNovoItemPage() {
         const uploadResult = await uploadString(imageRef, aiGeneratedImage, 'data_url');
         return await getDownloadURL(uploadResult.ref);
       } catch (error) {
-        console.error("Erro ao fazer upload da imagem gerada por IA:", error);
+        const storageError = error as StorageError;
+        console.error("Erro ao fazer upload da imagem gerada por IA:", storageError);
         toast({ title: "Erro no Upload", description: "Falha ao salvar imagem da IA.", variant: "destructive" });
         return null;
       }
@@ -199,7 +200,8 @@ function OriginalNovoItemPage() {
           uploadTask.on('state_changed',
             (snapshot) => { /* Progress can be handled here if needed */ },
             (error) => {
-              console.error("Erro ao fazer upload do arquivo de imagem:", error);
+              const storageError = error as StorageError;
+              console.error("Erro ao fazer upload do arquivo de imagem:", storageError);
               toast({ title: "Erro no Upload", description: "Falha ao salvar imagem carregada.", variant: "destructive" });
               reject(null);
             },
@@ -209,8 +211,9 @@ function OriginalNovoItemPage() {
             }
           );
         });
-      } catch (error) { // Should be caught by uploadTask.on error handler
-        console.error("Exceção no upload do arquivo de imagem:", error);
+      } catch (error) { 
+        const storageError = error as StorageError;
+        console.error("Exceção no upload do arquivo de imagem:", storageError);
         toast({ title: "Erro no Upload", description: "Exceção ao salvar imagem carregada.", variant: "destructive" });
         return null;
       }
@@ -265,7 +268,8 @@ function OriginalNovoItemPage() {
       router.push('/dashboard/produtos'); 
 
     } catch (error) {
-      console.error("Erro ao salvar item: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar item: ", firestoreError);
       toast({
         title: "Erro ao Salvar",
         description: "Não foi possível salvar o item. Verifique o console para detalhes.",
@@ -551,4 +555,3 @@ function OriginalNovoItemPage() {
 
 const NovoItemPage = React.memo(OriginalNovoItemPage);
 export default NovoItemPage;
-

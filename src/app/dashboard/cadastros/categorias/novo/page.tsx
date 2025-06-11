@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, type FirebaseError } from 'firebase/firestore';
 
 export default function NovaCategoriaPage() {
   const router = useRouter();
@@ -67,7 +67,8 @@ export default function NovaCategoriaPage() {
       router.push('/dashboard/cadastros/categorias'); 
 
     } catch (error) {
-      console.error("Erro ao salvar categoria: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar categoria: ", firestoreError);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível criar a categoria. Verifique o console para mais detalhes.",

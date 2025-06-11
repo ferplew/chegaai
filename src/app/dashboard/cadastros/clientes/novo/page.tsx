@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, UserPlus, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
 export default function NovoClientePage() {
   const router = useRouter();
@@ -100,7 +100,8 @@ export default function NovoClientePage() {
       router.push('/dashboard/cadastros/clientes'); 
 
     } catch (error) {
-      console.error("Erro ao salvar cliente: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar cliente: ", firestoreError);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível cadastrar o cliente. Verifique o console para mais detalhes.",

@@ -26,7 +26,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { db } from '@/lib/firebase/config';
-import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query, type DocumentData } from 'firebase/firestore';
+import { collection, query, orderBy, where, onSnapshot, Timestamp, type Query, type DocumentData, type FirebaseError } from 'firebase/firestore';
 
 interface Pedido {
   id: string;
@@ -98,7 +98,7 @@ function OriginalPedidosPage() {
 
       setPedidos(filteredByNameOrId);
       setIsLoading(false);
-    }, (error) => {
+    }, (error: FirebaseError) => {
       console.error("Erro ao buscar pedidos: ", error);
       toast({ title: "Erro ao carregar pedidos", description: error.message, variant: "destructive" });
       setIsLoading(false);

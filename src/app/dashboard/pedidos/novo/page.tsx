@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link";
 import { ArrowLeft, Loader2, DollarSign, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timestamp, type FirebaseError } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
@@ -159,7 +159,8 @@ export default function NovoPedidoPage() {
             variant: "default", 
           });
         } catch (addressError) {
-          console.error("Erro ao salvar endereço separadamente: ", addressError);
+          const firestoreAddressError = addressError as FirebaseError;
+          console.error("Erro ao salvar endereço separadamente: ", firestoreAddressError);
           toast({
             title: "Erro ao salvar endereço do pedido",
             description: "Não foi possível registrar o endereço na coleção de endereços. Verifique o console.",
@@ -172,7 +173,8 @@ export default function NovoPedidoPage() {
       router.push('/dashboard/pedidos'); 
 
     } catch (error) {
-      console.error("Erro ao salvar pedido: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar pedido: ", firestoreError);
       toast({
         title: "Erro ao salvar pedido",
         description: "Não foi possível criar o pedido. Verifique o console para mais detalhes.",

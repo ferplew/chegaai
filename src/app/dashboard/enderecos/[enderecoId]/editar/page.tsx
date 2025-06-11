@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
 
 interface EnderecoFormData {
@@ -72,7 +72,8 @@ export default function EditarEnderecoPage() {
             toast({ title: "Erro", description: "Endereço não encontrado para edição.", variant: "destructive" });
           }
         } catch (error) {
-            console.error("Erro ao buscar endereço para edição:", error);
+            const firestoreError = error as FirebaseError;
+            console.error("Erro ao buscar endereço para edição:", firestoreError);
             setNotFound(true); 
             toast({ title: "Erro ao carregar", description: "Não foi possível carregar os dados do endereço.", variant: "destructive" });
         } finally {
@@ -108,7 +109,8 @@ export default function EditarEnderecoPage() {
       toast({ title: "Endereço atualizado!", description: "As alterações foram salvas com sucesso no Firestore." });
       router.push('/dashboard/enderecos');
     } catch (error) {
-      console.error("Erro ao atualizar endereço: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao atualizar endereço: ", firestoreError);
       toast({ title: "Erro ao salvar", description: "Não foi possível atualizar o endereço.", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -239,5 +241,4 @@ export default function EditarEnderecoPage() {
     </div>
   );
 }
-
     

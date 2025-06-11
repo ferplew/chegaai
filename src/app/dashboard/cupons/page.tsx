@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +57,7 @@ export default function CuponsPage() {
       setCupons(cuponsData);
       setIsLoading(false);
       setError(null);
-    }, (err) => {
+    }, (err: FirebaseError) => {
       console.error("Erro ao buscar cupons: ", err);
       setError("Não foi possível carregar os cupons. Tente novamente mais tarde.");
       toast({ title: "Erro ao carregar cupons", description: err.message, variant: "destructive" });
@@ -92,7 +92,8 @@ export default function CuponsPage() {
         description: `O cupom "${cupomToDelete.nome}" foi removido com sucesso.`,
       });
     } catch (err) {
-      console.error("Erro ao excluir cupom: ", err);
+      const firestoreError = err as FirebaseError;
+      console.error("Erro ao excluir cupom: ", firestoreError);
       toast({
         title: "Erro ao excluir",
         description: `Não foi possível remover o cupom "${cupomToDelete.nome}". Tente novamente.`,
@@ -233,4 +234,3 @@ export default function CuponsPage() {
     </div>
   );
 }
-

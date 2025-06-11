@@ -4,7 +4,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
-import { doc, getDoc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useToast } from "@/hooks/use-toast";
 
@@ -70,7 +70,8 @@ export default function EditarPedidoPage() {
             toast({ title: "Erro", description: "Pedido não encontrado para edição.", variant: "destructive" });
           }
         } catch (error) {
-          console.error("Erro ao buscar pedido para edição:", error);
+          const firestoreError = error as FirebaseError;
+          console.error("Erro ao buscar pedido para edição:", firestoreError);
           setNotFound(true); // Consider not found if fetch fails critically
           toast({ title: "Erro ao carregar", description: "Não foi possível carregar os dados do pedido.", variant: "destructive" });
         } finally {
@@ -129,7 +130,8 @@ export default function EditarPedidoPage() {
       });
       router.push(`/dashboard/pedidos/${pedidoId}`);
     } catch (error) {
-      console.error("Erro ao atualizar pedido: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao atualizar pedido: ", firestoreError);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível atualizar o pedido. Verifique o console para mais detalhes.",
@@ -329,5 +331,4 @@ export default function EditarPedidoPage() {
     </div>
   );
 }
-
     

@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
 export default function NovoFuncionarioPage() {
   const router = useRouter();
@@ -56,8 +56,9 @@ export default function NovoFuncionarioPage() {
       resetForm();
       router.push('/dashboard/usuarios'); 
 
-    } catch (error: any) {
-      console.error("Erro ao cadastrar funcionário: ", error);
+    } catch (error) {
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao cadastrar funcionário: ", firestoreError);
       toast({
         title: "Erro ao Cadastrar",
         description: "Não foi possível cadastrar o funcionário. Verifique o console.",

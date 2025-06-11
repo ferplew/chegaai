@@ -17,7 +17,7 @@ import type { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
 
 export default function NovoCupomPage() {
   const router = useRouter();
@@ -91,7 +91,8 @@ export default function NovoCupomPage() {
       router.push('/dashboard/cupons'); 
 
     } catch (error) {
-      console.error("Erro ao salvar cupom: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar cupom: ", firestoreError);
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível criar o cupom. Verifique o console para mais detalhes.",
@@ -240,6 +241,4 @@ export default function NovoCupomPage() {
     </div>
   );
 }
-
-
     

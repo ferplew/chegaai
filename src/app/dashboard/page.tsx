@@ -11,7 +11,7 @@ import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, P
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirebaseError, Timestamp } from 'firebase/firestore';
 
 // Example data for the chart structure, actual data should be dynamic
 const dailyOrdersDataExample = [
@@ -23,6 +23,14 @@ const dailyOrdersDataExample = [
 const chartConfig = {
   pedidos: { label: "Pedidos", color: "hsl(var(--primary))" },
 };
+
+interface RecentOrder {
+  id: string;
+  nomeCliente?: string;
+  status: string;
+  valorTotal?: number;
+  dataCriacao?: Timestamp; 
+}
 
 function getStatusBadgeClass(status: string): string {
   switch (status.toLowerCase()) {
@@ -38,8 +46,7 @@ function getStatusBadgeClass(status: string): string {
 function OriginalDashboardPage() {
   const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
   const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
-  // Placeholder for actual recent orders data - should be fetched
-  const [recentOrders, setRecentOrders] = useState<any[]>([]); 
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]); 
   const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(true);
 
 
@@ -50,7 +57,7 @@ function OriginalDashboardPage() {
     const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
       setPedidosEmAndamentoCount(querySnapshot.size);
       setIsLoadingPedidosEmAndamento(false);
-    }, (error) => {
+    }, (error: FirebaseError) => {
       console.error("Erro ao buscar pedidos em andamento:", error);
       setPedidosEmAndamentoCount(0); 
       setIsLoadingPedidosEmAndamento(false);
@@ -191,7 +198,7 @@ function OriginalDashboardPage() {
                   recentOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{order.clienteNome || 'N/A'}</TableCell> {/* Assuming clienteNome */}
+                      <TableCell className="hidden sm:table-cell">{order.nomeCliente || 'N/A'}</TableCell>
                       <TableCell>
                          <Badge variant={"outline"} className={`whitespace-nowrap ${getStatusBadgeClass(order.status)}`}>
                           {order.status}

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
 export default function NovoEnderecoPage() {
   const router = useRouter();
@@ -55,7 +55,8 @@ export default function NovoEnderecoPage() {
       toast({ title: "Endereço salvo!", description: "O novo endereço foi salvo com sucesso no Firestore." });
       router.push('/dashboard/enderecos');
     } catch (error) {
-      console.error("Erro ao salvar endereço: ", error);
+      const firestoreError = error as FirebaseError;
+      console.error("Erro ao salvar endereço: ", firestoreError);
       toast({ title: "Erro ao salvar", description: "Não foi possível salvar o endereço.", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -147,5 +148,4 @@ export default function NovoEnderecoPage() {
     </div>
   );
 }
-
     

@@ -19,7 +19,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
-  type User
+  type User,
+  type AuthError
 } from 'firebase/auth';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
@@ -143,11 +144,12 @@ export default function LoginPage() {
         });
         setAction('login'); 
         clearAllFields(); 
-      } catch (error: any) {
+      } catch (error) {
+        const authError = error as AuthError;
         let errorMessage = "Ocorreu um erro durante o cadastro.";
-        if (error.code === 'auth/email-already-in-use') {
+        if (authError.code === 'auth/email-already-in-use') {
           errorMessage = "Este e-mail já está em uso.";
-        } else if (error.code === 'auth/weak-password') {
+        } else if (authError.code === 'auth/weak-password') {
           errorMessage = "A senha é muito fraca. Use pelo menos 6 caracteres.";
         }
         toast({
@@ -155,7 +157,7 @@ export default function LoginPage() {
           description: errorMessage,
           variant: "destructive",
         });
-        console.error("Erro no cadastro:", error);
+        console.error("Erro no cadastro:", authError);
       }
     } else { // Login
       try {
@@ -165,11 +167,12 @@ export default function LoginPage() {
           description: "Redirecionando para o painel...",
         });
         router.push('/dashboard');
-      } catch (error: any) {
+      } catch (error) {
+        const authError = error as AuthError;
         let errorMessage = "E-mail ou senha inválidos.";
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
            errorMessage = "E-mail ou senha incorretos. Verifique suas credenciais.";
-        } else if (error.code === 'auth/unauthorized-domain') {
+        } else if (authError.code === 'auth/unauthorized-domain') {
            errorMessage = "Domínio não autorizado. Verifique as configurações no Firebase Console.";
         }
         toast({
@@ -177,7 +180,7 @@ export default function LoginPage() {
           description: errorMessage,
           variant: "destructive",
         });
-        console.error("Erro no login:", error);
+        console.error("Erro no login:", authError);
       }
     }
     setIsLoading(false);
@@ -193,23 +196,22 @@ export default function LoginPage() {
         description: "Redirecionando para o painel...",
       });
       router.push('/dashboard');
-    } catch (error: any) {
-      console.error("Erro no login com Google (objeto completo):", error); 
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Erro no login com Google (objeto completo):", authError); 
 
       let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google.";
 
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (authError.code === 'auth/popup-closed-by-user') {
         descriptionMessage = "A janela de login do Google foi fechada antes da conclusão.";
-      } else if (error.code === 'auth/cancelled-popup-request') {
+      } else if (authError.code === 'auth/cancelled-popup-request') {
         descriptionMessage = "Múltiplas tentativas de login com o Google. Por favor, tente novamente.";
-      } else if (error.code === 'auth/unauthorized-domain') {
+      } else if (authError.code === 'auth/unauthorized-domain') {
         descriptionMessage = "Domínio não autorizado para login com Google. Verifique o Firebase Console.";
-      } else if (error.code && error.message) {
-        descriptionMessage = `Erro (${error.code}): ${error.message}.`;
-      } else if (error.code) {
-        descriptionMessage = `Erro: ${error.code}.`;
-      } else if (error.message) {
-        descriptionMessage = `Erro: ${error.message}.`;
+      } else if (authError.code && authError.message) {
+        descriptionMessage = `Erro (${authError.code}): ${authError.message}.`;
+      } else if (authError.code) {
+        descriptionMessage = `Erro: ${authError.code}.`;
       }
       
       toast({
