@@ -7,16 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Link as LinkIcon, QrCode, ExternalLink, Info, LayoutList } from "lucide-react";
+import { Copy, ExternalLink, QrCode, Info, LayoutList } from "lucide-react";
 
 export default function CardapioVirtualPage() {
   const { toast } = useToast();
-  // TODO: Substituir por dados reais do perfil do negócio
+  // TODO: Substituir por dados reais do perfil do negócio (quando implementado)
   const [restaurantSlug, setRestaurantSlug] = useState("meu-restaurante-exemplo"); 
   const [publicLink, setPublicLink] = useState("");
 
   useEffect(() => {
-    // Simula a geração do link público. Em um cenário real, isso pode vir de uma configuração.
     if (typeof window !== "undefined") {
       const origin = window.location.origin;
       setPublicLink(`${origin}/cardapio/${restaurantSlug}`);
