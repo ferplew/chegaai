@@ -3,9 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, where, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // Para deletar usuário do Auth
-import { db, app } from '@/lib/firebase/config'; // app é necessário para getAuth
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,10 +16,8 @@ import { useRouter } from 'next/navigation';
 
 interface Funcionario {
   id: string; // Firestore document ID
-  uid: string; // Firebase Auth UID
   nome: string;
-  email: string;
-  perfil: 'Admin' | 'Operador' | 'Gerente' | string;
+  perfil: 'Admin' | 'Operador' | 'Gerente' | 'Cozinha' | string; // Tipos específicos + string para flexibilidade
   status: 'Ativo' | 'Inativo';
   dataCriacao?: Timestamp;
 }
@@ -39,9 +36,9 @@ function getPerfilBadgeVariant(perfil: string): "default" | "secondary" | "outli
 function getStatusBadgeVariant(status: string): "default" | "destructive" | "secondary" {
     switch (status?.toLowerCase()) {
       case 'ativo':
-        return 'default'; // Usar default para ativo para ter fundo verde
+        return 'default'; 
       case 'inativo':
-        return 'secondary'; // Usar secondary para inativo para ter fundo cinza
+        return 'secondary'; 
       default:
         return 'outline';
     }
@@ -82,7 +79,7 @@ export default function UsuariosPage() {
   }, [toast]);
   
   const handleEdit = (id: string) => {
-    // router.push(`/dashboard/usuarios/${id}/editar`);
+    // router.push(`/dashboard/usuarios/${id}/editar`); // Edição será implementada depois
     toast({ title: "Em breve", description: `Funcionalidade de editar funcionário ${id} será implementada.`});
   }
 
@@ -95,27 +92,11 @@ export default function UsuariosPage() {
     if (!funcionarioToDelete) return;
     setIsDeleting(true); 
     
-    // ATENÇÃO: Deletar do Firebase Auth é uma operação sensível e irreversível.
-    // Idealmente, isso seria feito no backend com verificação de permissões.
-    // Aqui, estamos fazendo client-side para fins de protótipo.
-    // NÂO FAÇA ISSO EM PRODUÇÃO SEM MEDIDAS DE SEGURANÇA ADEQUADAS.
     try {
-      // Primeiro, deletar do Firestore
       await deleteDoc(doc(db, 'funcionarios', funcionarioToDelete.id));
-      
-      // Tentar deletar do Firebase Auth - Isso é o mais complexo e requer reautenticação recente ou um backend.
-      // Para este protótipo, vamos assumir que a exclusão do Firestore é suficiente
-      // ou que a exclusão do Auth seria tratada de outra forma (ex: admin SDK no backend).
-      // Se tentarmos deletar do Auth aqui sem as condições corretas, vai falhar.
-      // Exemplo (geralmente falhará no cliente por segurança):
-      // const auth = getAuth(app);
-      // const user = auth.currentUser; // Isso é o *admin* logado, não o usuário a ser deletado
-      // Se você tiver o UID e uma função de backend, você chamaria essa função.
-      // Como não temos backend aqui, vamos focar na exclusão do Firestore.
-
       toast({
         title: "Funcionário removido!",
-        description: `O funcionário "${funcionarioToDelete.nome}" foi removido do sistema. A conta de autenticação pode precisar ser removida manualmente ou via backend.`,
+        description: `O funcionário "${funcionarioToDelete.nome}" foi removido da lista.`,
       });
     } catch (err) {
       console.error("Erro ao excluir funcionário: ", err);
@@ -137,7 +118,7 @@ export default function UsuariosPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline">Funcionários</h1>
-          <p className="text-muted-foreground">Gerencie os acessos da sua equipe ao painel.</p>
+          <p className="text-muted-foreground">Gerencie os membros da sua equipe.</p>
         </div>
         <Button asChild>
           <Link href="/dashboard/usuarios/novo">
@@ -151,7 +132,7 @@ export default function UsuariosPage() {
         <CardHeader>
           <CardTitle>Equipe Cadastrada</CardTitle>
           <CardDescription>
-            Lista de funcionários com acesso ao sistema.
+            Lista de funcionários e seus perfis.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -171,8 +152,7 @@ export default function UsuariosPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="hidden sm:table-cell">Perfil</TableHead>
+                  <TableHead>Perfil</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -182,8 +162,7 @@ export default function UsuariosPage() {
                   funcionarios.map((func) => (
                     <TableRow key={func.id}>
                       <TableCell className="font-medium">{func.nome}</TableCell>
-                      <TableCell>{func.email}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
+                      <TableCell>
                         <Badge variant={getPerfilBadgeVariant(func.perfil)}>{func.perfil}</Badge>
                       </TableCell>
                       <TableCell>
@@ -214,7 +193,7 @@ export default function UsuariosPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64">
+                    <TableCell colSpan={4} className="h-64">
                       <div className="flex flex-col items-center justify-center text-center p-4">
                         <Briefcase className="h-16 w-16 text-muted-foreground mb-4" />
                         <p className="text-lg font-medium text-muted-foreground">Nenhum funcionário cadastrado.</p>
@@ -236,8 +215,7 @@ export default function UsuariosPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover o funcionário <span className="font-semibold text-primary">{funcionarioToDelete?.nome}</span>? Esta ação removerá o acesso dele ao sistema.
-              A exclusão da conta de autenticação pode requerer ação adicional.
+              Tem certeza que deseja remover o funcionário <span className="font-semibold text-primary">{funcionarioToDelete?.nome}</span> da lista?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -256,4 +234,3 @@ export default function UsuariosPage() {
     </div>
   );
 }
-

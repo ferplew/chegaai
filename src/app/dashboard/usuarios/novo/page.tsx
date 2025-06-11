@@ -11,10 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, UserPlus, ShieldAlert } from "lucide-react";
-import { auth, db } from '@/lib/firebase/config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
+import { db } from '@/lib/firebase/config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const perfisDisponiveis = [
   { id: 'Admin', nome: 'Administrador' },
@@ -28,18 +27,12 @@ export default function NovoFuncionarioPage() {
   const { toast } = useToast();
 
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [perfil, setPerfil] = useState('');
   const [status, setStatus] = useState(true); // true = Ativo, false = Inativo
   const [isLoading, setIsLoading] = useState(false);
 
   const resetForm = () => {
     setNome('');
-    setEmail('');
-    setSenha('');
-    setConfirmarSenha('');
     setPerfil('');
     setStatus(true);
   };
@@ -48,42 +41,16 @@ export default function NovoFuncionarioPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    if (!nome.trim() || !email.trim() || !senha.trim() || !perfil) {
-      toast({ title: "Campos obrigatórios", description: "Nome, E-mail, Senha e Perfil são obrigatórios.", variant: "destructive" });
+    if (!nome.trim() || !perfil) {
+      toast({ title: "Campos obrigatórios", description: "Nome e Perfil são obrigatórios.", variant: "destructive" });
       setIsLoading(false);
       return;
-    }
-    if (senha !== confirmarSenha) {
-      toast({ title: "Senhas não coincidem", description: "Por favor, verifique a confirmação da senha.", variant: "destructive" });
-      setIsLoading(false);
-      return;
-    }
-    if (senha.length < 6) {
-        toast({ title: "Senha muito curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
-        setIsLoading(false);
-        return;
     }
 
     try {
-      // Verificar se e-mail já existe no Firebase Auth ou na coleção 'funcionarios'
       const funcionariosCollectionRef = collection(db, 'funcionarios');
-      const q = query(funcionariosCollectionRef, where('email', '==', email.trim().toLowerCase()));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-          toast({ title: "E-mail já cadastrado", description: "Este e-mail já está em uso por outro funcionário.", variant: "destructive" });
-          setIsLoading(false);
-          return;
-      }
-
-      // Criar usuário no Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), senha);
-      const user = userCredential.user;
-
-      // Salvar detalhes do funcionário no Firestore
       await addDoc(funcionariosCollectionRef, {
-        uid: user.uid,
         nome: nome.trim(),
-        email: email.trim().toLowerCase(),
         perfil: perfil,
         status: status ? 'Ativo' : 'Inativo',
         dataCriacao: serverTimestamp(),
@@ -91,7 +58,7 @@ export default function NovoFuncionarioPage() {
 
       toast({
         title: "Funcionário Cadastrado!",
-        description: `O funcionário ${nome.trim()} foi criado com sucesso.`,
+        description: `O funcionário ${nome.trim()} foi adicionado à lista.`,
       });
       
       resetForm();
@@ -99,17 +66,9 @@ export default function NovoFuncionarioPage() {
 
     } catch (error: any) {
       console.error("Erro ao cadastrar funcionário: ", error);
-      let errorMessage = "Não foi possível cadastrar o funcionário. Verifique o console.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "Este e-mail já está cadastrado no sistema de autenticação.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "A senha fornecida é muito fraca.";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "O formato do e-mail é inválido.";
-      }
       toast({
         title: "Erro ao Cadastrar",
-        description: errorMessage,
+        description: "Não foi possível cadastrar o funcionário. Verifique o console.",
         variant: "destructive",
       });
     } finally {
@@ -132,7 +91,7 @@ export default function NovoFuncionarioPage() {
             Novo Funcionário
           </h1>
           <p className="text-muted-foreground">
-            Crie um novo acesso para sua equipe.
+            Adicione um membro à sua equipe.
           </p>
         </div>
       </div>
@@ -142,7 +101,7 @@ export default function NovoFuncionarioPage() {
           <CardHeader>
             <CardTitle>Dados do Funcionário</CardTitle>
             <CardDescription>
-              Preencha as informações para criar o login e perfil do funcionário.
+              Preencha as informações para identificar o funcionário e seu papel.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -158,56 +117,7 @@ export default function NovoFuncionarioPage() {
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail de Acesso <span className="text-destructive">*</span></Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@seudominio.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="senha">Senha Inicial <span className="text-destructive">*</span></Label>
-                    <Input
-                        id="senha"
-                        type="password"
-                        placeholder="Mínimo 6 caracteres"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        required
-                        disabled={isLoading}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="confirmarSenha">Confirmar Senha <span className="text-destructive">*</span></Label>
-                    <Input
-                        id="confirmarSenha"
-                        type="password"
-                        placeholder="Repita a senha"
-                        value={confirmarSenha}
-                        onChange={(e) => setConfirmarSenha(e.target.value)}
-                        required
-                        disabled={isLoading}
-                    />
-                </div>
-            </div>
-            <div className="p-3 border border-amber-500/50 bg-amber-500/10 rounded-md">
-                <div className="flex items-start gap-2">
-                    <ShieldAlert className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                        <p className="text-sm font-medium text-amber-700 dark:text-amber-500">Atenção com a Senha!</p>
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                            Você está definindo a senha inicial. Comunique-a ao funcionário de forma segura e instrua-o a alterá-la no primeiro acesso (funcionalidade futura).
-                        </p>
-                    </div>
-                </div>
-            </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                  <div className="space-y-2">
                     <Label htmlFor="perfil">Perfil de Acesso <span className="text-destructive">*</span></Label>
@@ -227,7 +137,7 @@ export default function NovoFuncionarioPage() {
                     <Label htmlFor="status" className="mb-0 cursor-pointer">
                         Status do Funcionário
                         <span className="block text-xs text-muted-foreground">
-                        {status ? "Acesso ativo ao sistema." : "Acesso desativado."}
+                        {status ? "Funcionário ativo." : "Funcionário inativo."}
                         </span>
                     </Label>
                 </div>
@@ -259,4 +169,3 @@ export default function NovoFuncionarioPage() {
     </div>
   );
 }
-
