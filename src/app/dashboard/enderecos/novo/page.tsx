@@ -1,13 +1,64 @@
 
 "use client";
 
+import { useState, type FormEvent } from 'react';
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function NovoEnderecoPage() {
-  // TODO: Implement form state and submission logic
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [rua, setRua] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [cep, setCep] = useState('');
+  const [complemento, setComplemento] = useState('');
+  const [referencia, setReferencia] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+
+    if (!rua.trim() || !bairro.trim() || !cidade.trim() || !cep.trim()) {
+        toast({ title: "Campos obrigatórios", description: "Rua, Bairro, Cidade e CEP são obrigatórios.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+    }
+
+    // Simulação de salvamento
+    console.log("Salvando novo endereço:", { rua, numero, bairro, cidade, cep, complemento, referencia });
+    
+    // TODO: Integrar com Firestore para salvar o endereço
+    // try {
+    //   // Lógica para salvar no Firestore
+    //   toast({ title: "Endereço salvo!", description: "O novo endereço foi salvo com sucesso." });
+    //   router.push('/dashboard/enderecos');
+    // } catch (error) {
+    //   toast({ title: "Erro ao salvar", description: "Não foi possível salvar o endereço.", variant: "destructive" });
+    // } finally {
+    //   setIsLoading(false);
+    // }
+
+    // Simulação de sucesso e redirecionamento
+    setTimeout(() => {
+      toast({
+        title: "Endereço 'salvo' (simulado)!",
+        description: "Os dados do endereço foram registrados no console.",
+      });
+      router.push('/dashboard/enderecos');
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <div className="space-y-6">
@@ -27,24 +78,65 @@ export default function NovoEnderecoPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Informações do Endereço</CardTitle>
-          <CardDescription>
-            Campos como Rua, Número, Bairro, CEP, etc.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Placeholder for address form fields */}
-          <div className="flex items-center justify-center h-64 border border-dashed rounded-md">
-            <p className="text-muted-foreground">Formulário de endereço em construção.</p>
-          </div>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/enderecos">Cancelar</Link>
-            </Button>
-            <Button type="submit" disabled>Salvar Endereço (Em breve)</Button>
-          </div>
-        </CardContent>
+        <form onSubmit={handleSubmit}>
+          <CardHeader>
+            <CardTitle>Informações do Endereço</CardTitle>
+            <CardDescription>
+              Preencha todos os campos para cadastrar o endereço.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="rua">Rua / Avenida <span className="text-destructive">*</span></Label>
+                <Input id="rua" value={rua} onChange={(e) => setRua(e.target.value)} placeholder="Ex: Rua das Palmeiras" required />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="numero">Número</Label>
+                <Input id="numero" value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="Ex: 123" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="bairro">Bairro <span className="text-destructive">*</span></Label>
+                <Input id="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Ex: Centro" required />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cep">CEP <span className="text-destructive">*</span></Label>
+                <Input id="cep" value={cep} onChange={(e) => setCep(e.target.value)} placeholder="Ex: 12345-678" required />
+              </div>
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="cidade">Cidade <span className="text-destructive">*</span></Label>
+                <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: Cidade Exemplo" required />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="complemento">Complemento</Label>
+              <Input id="complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} placeholder="Ex: Apto 101, Bloco B" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="referencia">Ponto de Referência</Label>
+              <Textarea id="referencia" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Ex: Próximo ao mercado, em frente à praça" rows={2} />
+            </div>
+          </CardContent>
+          <CardFooter className="border-t px-6 py-4">
+            <div className="flex justify-end gap-2 w-full">
+              <Button variant="outline" asChild type="button" disabled={isLoading}>
+                <Link href="/dashboard/enderecos">Cancelar</Link>
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar Endereço"
+                )}
+              </Button>
+            </div>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
