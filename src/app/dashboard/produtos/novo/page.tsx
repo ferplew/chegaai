@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Loader2, DollarSign, ImageIcon, UploadCloud, Sparkles, Wand2, Trash2, PlusCircle, Info, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow';
+import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/suggest-item-details-flow'; // Now suggests only titles
+import { suggestItemDescriptionsByTitle, type SuggestItemDescriptionsByTitleOutput } from '@/ai/flows/suggest-item-descriptions-by-title-flow'; // New flow
 import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
 // import { db } from '@/lib/firebase/config'; // Para o próximo passo
 // import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Para o próximo passo
@@ -46,9 +47,12 @@ export default function NovoItemPage() {
 
   // AI Text Suggestions
   const [aiKeywords, setAiKeywords] = useState('');
-  const [aiSuggestions, setAiSuggestions] = useState<SuggestItemDetailsOutput | null>(null);
-  const [isLoadingAiText, setIsLoadingAiText] = useState(false);
+  const [aiSuggestedTitles, setAiSuggestedTitles] = useState<string[] | null>(null);
+  const [isLoadingAiTitles, setIsLoadingAiTitles] = useState(false);
   const [selectedAiTitle, setSelectedAiTitle] = useState<string | null>(null);
+
+  const [aiSuggestedDescriptions, setAiSuggestedDescriptions] = useState<string[] | null>(null);
+  const [isLoadingAiDescriptions, setIsLoadingAiDescriptions] = useState(false);
   const [selectedAiDescription, setSelectedAiDescription] = useState<string | null>(null);
 
 
@@ -86,30 +90,53 @@ export default function NovoItemPage() {
   }, [imagemUrl, imagemArquivo, aiGeneratedImage]);
 
 
-  const handleSuggestDetails = async () => {
+  const handleSuggestTitles = async () => {
     if (!aiKeywords.trim()) {
       toast({ title: "Palavras-chave vazias", description: "Digite algumas palavras-chave para a IA.", variant: "destructive" });
       return;
     }
-    setIsLoadingAiText(true);
-    setAiSuggestions(null);
+    setIsLoadingAiTitles(true);
+    setAiSuggestedTitles(null);
     setSelectedAiTitle(null);
-    setSelectedAiDescription(null);
     try {
-      const result = await suggestItemDetails({ keywords: aiKeywords });
-      setAiSuggestions(result);
-      toast({ title: "Sugestões Geradas!", description: "A IA preparou algumas sugestões para você." });
+      const result = await suggestItemDetails({ keywords: aiKeywords }); // This flow now only returns titles
+      setAiSuggestedTitles(result.suggestedTitles || []);
+      toast({ title: "Títulos Sugeridos!", description: "A IA preparou algumas sugestões de título." });
     } catch (error) {
-      console.error("Erro ao sugerir detalhes:", error);
-      toast({ title: "Erro da IA", description: "Não foi possível gerar sugestões. Tente novamente.", variant: "destructive" });
+      console.error("Erro ao sugerir títulos:", error);
+      toast({ title: "Erro da IA", description: "Não foi possível gerar sugestões de título. Tente novamente.", variant: "destructive" });
     } finally {
-      setIsLoadingAiText(false);
+      setIsLoadingAiTitles(false);
     }
   };
+
+  const handleSuggestDescriptions = async () => {
+    if (!nome.trim()) {
+        toast({ title: "Nome do item vazio", description: "Primeiro defina um nome para o item.", variant: "destructive" });
+        return;
+    }
+    setIsLoadingAiDescriptions(true);
+    setAiSuggestedDescriptions(null);
+    setSelectedAiDescription(null);
+    try {
+        const result = await suggestItemDescriptionsByTitle({ itemTitle: nome });
+        setAiSuggestedDescriptions(result.suggestedDescriptions || []);
+        toast({ title: "Descrições Sugeridas!", description: "A IA preparou algumas sugestões de descrição para o título." });
+    } catch (error) {
+        console.error("Erro ao sugerir descrições:", error);
+        toast({ title: "Erro da IA", description: "Não foi possível gerar sugestões de descrição. Tente novamente.", variant: "destructive" });
+    } finally {
+        setIsLoadingAiDescriptions(false);
+    }
+  };
+
 
   const handleApplyAiTitle = (title: string) => {
     setNome(title);
     setSelectedAiTitle(title);
+    // Clear description suggestions if title changes
+    setAiSuggestedDescriptions(null);
+    setSelectedAiDescription(null);
   };
 
   const handleApplyAiDescription = (description: string) => {
@@ -130,7 +157,7 @@ export default function NovoItemPage() {
       const result = await generateItemImage({ title: nome });
       if (result.imageDataUri) {
         setAiGeneratedImage(result.imageDataUri);
-        setImagemPreview(result.imageDataUri); // This will trigger useEffect
+        // setImagemPreview(result.imageDataUri); // This will trigger useEffect
         toast({ title: "Imagem Gerada!", description: "A IA criou uma imagem para seu item." });
       } else {
          toast({ title: "Erro da IA", description: "A IA não retornou uma imagem.", variant: "destructive" });
@@ -221,12 +248,12 @@ export default function NovoItemPage() {
         </div>
       </div>
 
-      {/* AI Text Suggestions Card */}
+      {/* AI Title Suggestions Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA para Detalhes</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary"/> Assistente IA para Título</CardTitle>
           <CardDescription>
-            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir títulos, descrições e adicionais.
+            Digite palavras-chave (ex: "pizza calabresa grande queijo") e deixe a IA sugerir títulos.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -238,65 +265,28 @@ export default function NovoItemPage() {
               onChange={(e) => setAiKeywords(e.target.value)}
               className="flex-grow"
             />
-            <Button onClick={handleSuggestDetails} disabled={isLoadingAiText} className="w-full sm:w-auto">
-              {isLoadingAiText ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-              Sugerir Detalhes
+            <Button onClick={handleSuggestTitles} disabled={isLoadingAiTitles} className="w-full sm:w-auto">
+              {isLoadingAiTitles ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
+              Sugerir Títulos
             </Button>
           </div>
-          {aiSuggestions && (
-            <div className="space-y-4 p-4 border rounded-md bg-muted/30">
-              {/* Suggested Titles */}
-              {aiSuggestions.suggestedTitles && aiSuggestions.suggestedTitles.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="font-semibold text-base">Títulos Sugeridos:</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {aiSuggestions.suggestedTitles.map((title, index) => (
-                      <Button
-                        key={`title-${index}`}
-                        variant={selectedAiTitle === title ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleApplyAiTitle(title)}
-                        className="text-left justify-start h-auto py-2 leading-snug"
-                      >
-                        {selectedAiTitle === title && <CheckCircle className="h-4 w-4 mr-2 text-primary-foreground group-hover:text-primary-foreground" />}
-                        {title}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Suggested Descriptions */}
-              {aiSuggestions.suggestedDescriptions && aiSuggestions.suggestedDescriptions.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="font-semibold text-base">Descrições Sugeridas:</Label>
-                  {aiSuggestions.suggestedDescriptions.map((desc, index) => (
-                     <Button
-                        key={`desc-${index}`}
-                        variant={selectedAiDescription === desc ? "default" : "outline"}
-                        onClick={() => handleApplyAiDescription(desc)}
-                        className="w-full text-left justify-start h-auto py-2 mb-2 whitespace-normal leading-snug text-sm"
-                      >
-                       <div className="flex items-start">
-                         {selectedAiDescription === desc && <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-primary-foreground group-hover:text-primary-foreground" />}
-                         <span>{desc}</span>
-                       </div>
-                      </Button>
-                  ))}
-                </div>
-              )}
-
-              {/* Suggested Additionals */}
-              {aiSuggestions.suggestedAdditionals && aiSuggestions.suggestedAdditionals.length > 0 && (
-                <div className="space-y-1">
-                  <Label className="font-semibold text-base">Nomes de Adicionais Sugeridos:</Label>
-                  <ul className="list-disc list-inside text-sm space-y-1 pl-1 text-muted-foreground">
-                    {aiSuggestions.suggestedAdditionals.map((ad, index) => (
-                      <li key={`add-${index}`}>{ad} (você pode adicionar o preço abaixo)</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+          {aiSuggestedTitles && aiSuggestedTitles.length > 0 && (
+            <div className="space-y-2 p-4 border rounded-md bg-muted/30">
+              <Label className="font-semibold text-base">Títulos Sugeridos:</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {aiSuggestedTitles.map((title, index) => (
+                  <Button
+                    key={`title-${index}`}
+                    variant={selectedAiTitle === title ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleApplyAiTitle(title)}
+                    className="text-left justify-start h-auto py-2 leading-snug"
+                  >
+                    {selectedAiTitle === title && <CheckCircle className="h-4 w-4 mr-2 text-primary-foreground group-hover:text-primary-foreground" />}
+                    {title}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
@@ -320,10 +310,45 @@ export default function NovoItemPage() {
                 onChange={(e) => {
                   setNome(e.target.value);
                   if(selectedAiTitle) setSelectedAiTitle(null); 
+                  setAiSuggestedDescriptions(null); // Clear description suggestions if title changes manually
+                  setSelectedAiDescription(null);
                 }}
                 required
               />
             </div>
+
+            {/* AI Description Suggestions Card - Only if nome has value */}
+            {nome.trim() && (
+              <Card className="bg-muted/20">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="flex items-center gap-2 text-lg"><Sparkles className="h-4 w-4 text-primary"/> Assistente IA para Descrição</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <Button onClick={handleSuggestDescriptions} disabled={isLoadingAiDescriptions || !nome.trim()} className="w-full sm:w-auto" size="sm" variant="outline">
+                    {isLoadingAiDescriptions ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                    Sugerir Descrições (usando o nome do item)
+                  </Button>
+                  {aiSuggestedDescriptions && aiSuggestedDescriptions.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <Label className="font-semibold text-base">Descrições Sugeridas:</Label>
+                      {aiSuggestedDescriptions.map((desc, index) => (
+                        <Button
+                            key={`desc-${index}`}
+                            variant={selectedAiDescription === desc ? "secondary" : "outline"}
+                            onClick={() => handleApplyAiDescription(desc)}
+                            className="w-full text-left justify-start h-auto py-2 mb-2 whitespace-normal leading-snug text-sm"
+                          >
+                          <div className="flex items-start">
+                            {selectedAiDescription === desc && <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-secondary-foreground group-hover:text-secondary-foreground" />}
+                            <span>{desc}</span>
+                          </div>
+                          </Button>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="descricao">Descrição</Label>
@@ -459,7 +484,7 @@ export default function NovoItemPage() {
                         <Label>Pré-visualização</Label>
                         <div className="h-48 w-full rounded-md border border-dashed bg-muted/30 flex items-center justify-center overflow-hidden">
                             {imagemPreview ? (
-                                <Image src={imagemPreview} alt="Pré-visualização" width={200} height={192} className="object-contain max-h-full max-w-full" />
+                                <Image src={imagemPreview} alt="Pré-visualização" width={200} height={192} className="object-contain max-h-full max-w-full" data-ai-hint="food item" />
                             ) : (
                                 <div className="text-center text-muted-foreground p-4">
                                     <ImageIcon className="mx-auto h-12 w-12 mb-2" />
