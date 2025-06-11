@@ -190,7 +190,7 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Erro no login com Google:", error); // Log completo do erro no console
+      console.error("Erro no login com Google:", error); 
 
       let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google. Verifique o console para mais detalhes.";
 
@@ -343,9 +343,9 @@ export default function LoginPage() {
           </form>
           
           <div className="my-6 flex items-center">
-            <Separator className="flex-grow" />
+            <Separator className="flex-1" />
             <span className="mx-4 text-xs text-muted-foreground">ou</span>
-            <Separator className="flex-grow" />
+            <Separator className="flex-1" />
           </div>
 
           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
