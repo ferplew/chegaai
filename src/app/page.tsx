@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +37,7 @@ const results = [
 
 const steps = [
   { icon: <UserPlus className="w-10 h-10 text-primary" />, title: "Crie sua conta", description: "Restaurante cria sua conta de forma rápida." },
-  { icon: <PlusCircle className="w-10 h-10 text-primary" />, title: "Cadastre pedidos", description: "Comece a registrar seus pedidos facilmente." },
+  { icon: <Package className="w-10 h-10 text-primary" />, title: "Cadastro de Itens", description: "Cadastre seus produtos e monte seu cardápio." },
   { icon: <LayoutDashboard className="w-10 h-10 text-primary" />, title: "Acompanhe no painel", description: "Monitore tudo em tempo real no dashboard." },
   { icon: <BarChart3 className="w-10 h-10 text-primary" />, title: "Analise e cresça", description: "Utilize os relatórios para otimizar e expandir." },
 ];
@@ -204,3 +205,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
