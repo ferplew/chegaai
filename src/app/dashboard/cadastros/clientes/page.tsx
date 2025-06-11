@@ -9,17 +9,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, Users } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, Users, MapPin } from "lucide-react";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+
+interface EnderecoCliente {
+  rua?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  complemento?: string;
+  referencia?: string;
+}
 
 interface Cliente {
   id: string;
   nome: string;
   email?: string;
   telefone?: string;
+  endereco?: EnderecoCliente | null;
   dataCadastro: Timestamp;
 }
 
@@ -35,7 +46,7 @@ export default function ClientesPage() {
   useEffect(() => {
     setIsLoading(true);
     const clientesCollectionRef = collection(db, 'clientes');
-    const q = query(clientesCollectionRef, orderBy('nomeLower', 'asc')); // Ordenar por nomeLower
+    const q = query(clientesCollectionRef, orderBy('nomeLower', 'asc')); 
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const clientesData: Cliente[] = [];
@@ -61,7 +72,8 @@ export default function ClientesPage() {
   };
   
   const handleEdit = (id: string) => {
-    router.push(`/dashboard/cadastros/clientes/${id}/editar`);
+    // router.push(`/dashboard/cadastros/clientes/${id}/editar`); // Implementar página de edição
+    toast({ title: "Em breve", description: `A funcionalidade de editar cliente ${id} será implementada.`});
   }
 
   const handleOpenDeleteDialog = (cliente: Cliente) => {
@@ -134,6 +146,7 @@ export default function ClientesPage() {
                   <TableHead>Nome</TableHead>
                   <TableHead className="hidden md:table-cell">E-mail</TableHead>
                   <TableHead className="hidden sm:table-cell">Telefone</TableHead>
+                  <TableHead className="hidden lg:table-cell">Cidade</TableHead>
                   <TableHead className="hidden lg:table-cell">Data de Cadastro</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -145,6 +158,14 @@ export default function ClientesPage() {
                       <TableCell className="font-medium">{cliente.nome}</TableCell>
                       <TableCell className="hidden md:table-cell">{cliente.email || '-'}</TableCell>
                       <TableCell className="hidden sm:table-cell">{cliente.telefone || '-'}</TableCell>
+                       <TableCell className="hidden lg:table-cell">
+                        {cliente.endereco?.cidade ? (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0"/> 
+                            {cliente.endereco.cidade}
+                          </span>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {formatDate(cliente.dataCadastro)}
                       </TableCell>
@@ -167,7 +188,7 @@ export default function ClientesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64">
+                    <TableCell colSpan={6} className="h-64">
                       <div className="flex flex-col items-center justify-center text-center p-4">
                         <Users className="h-16 w-16 text-muted-foreground mb-4" />
                         <p className="text-lg font-medium text-muted-foreground">Nenhum cliente cadastrado.</p>

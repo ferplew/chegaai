@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, Save, UserPlus, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function NovoClientePage() {
   const router = useRouter();
@@ -22,14 +23,30 @@ export default function NovoClientePage() {
   const [telefone, setTelefone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Campos de endereço
+  const [rua, setRua] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [cep, setCep] = useState('');
+  const [complemento, setComplemento] = useState('');
+  const [referencia, setReferencia] = useState('');
+
+
   const resetForm = () => {
     setNome('');
     setEmail('');
     setTelefone('');
+    setRua('');
+    setNumero('');
+    setBairro('');
+    setCidade('');
+    setCep('');
+    setComplemento('');
+    setReferencia('');
   };
 
   const isValidEmail = (email: string): boolean => {
-    // Basic email validation
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
@@ -52,16 +69,25 @@ export default function NovoClientePage() {
       return;
     }
     
-    // Opcional: Verificar se o cliente (por e-mail ou nome+telefone) já existe para evitar duplicatas exatas
-    // Para simplificar, esta verificação não será adicionada agora, mas pode ser um refinamento.
+    const enderecoData = (rua.trim() || cidade.trim() || cep.trim()) ? {
+        rua: rua.trim() || null,
+        numero: numero.trim() || null,
+        bairro: bairro.trim() || null,
+        cidade: cidade.trim() || null,
+        cep: cep.trim() || null,
+        complemento: complemento.trim() || null,
+        referencia: referencia.trim() || null,
+    } : null;
+
 
     try {
       const clientesCollectionRef = collection(db, 'clientes');
       await addDoc(clientesCollectionRef, {
         nome: nomeTrimmed,
-        nomeLower: nomeTrimmed.toLowerCase(), // Para busca e ordenação case-insensitive
-        email: emailTrimmed || null, // Salva como null se vazio
-        telefone: telefone.trim() || null, // Salva como null se vazio
+        nomeLower: nomeTrimmed.toLowerCase(),
+        email: emailTrimmed || null,
+        telefone: telefone.trim() || null,
+        endereco: enderecoData,
         dataCadastro: serverTimestamp(),
       });
 
@@ -86,7 +112,7 @@ export default function NovoClientePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-3xl mx-auto mb-12">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
           <Link href="/dashboard/cadastros/clientes">
@@ -105,10 +131,10 @@ export default function NovoClientePage() {
         </div>
       </div>
 
-      <Card>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
+        <Card>
           <CardHeader>
-            <CardTitle>Informações do Cliente</CardTitle>
+            <CardTitle>Informações Pessoais</CardTitle>
             <CardDescription>
               Preencha os dados do cliente. O nome é obrigatório.
             </CardDescription>
@@ -126,31 +152,75 @@ export default function NovoClientePage() {
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail (Opcional)</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                <Label htmlFor="email">E-mail (Opcional)</Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="telefone">Telefone/WhatsApp (Opcional)</Label>
+                <Input
+                    id="telefone"
+                    type="tel"
+                    placeholder="(00) 90000-0000"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                    disabled={isLoading}
+                />
+                </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone/WhatsApp (Opcional)</Label>
-              <Input
-                id="telefone"
-                type="tel"
-                placeholder="(00) 90000-0000"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            {/* Adicionar mais campos como CPF/CNPJ, Endereço se necessário no futuro */}
           </CardContent>
-          <CardFooter className="border-t px-6 py-4">
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/> Endereço (Opcional)</CardTitle>
+            <CardDescription>
+              Preencha os dados de endereço do cliente, se aplicável.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1 md:col-span-2">
+                    <Label htmlFor="rua">Rua / Avenida</Label>
+                    <Input id="rua" value={rua} onChange={(e) => setRua(e.target.value)} placeholder="Ex: Rua das Palmeiras" disabled={isLoading}/>
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="numero">Número</Label>
+                    <Input id="numero" value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="Ex: 123" disabled={isLoading}/>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                    <Label htmlFor="bairro">Bairro</Label>
+                    <Input id="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Ex: Centro" disabled={isLoading}/>
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="cep">CEP</Label>
+                    <Input id="cep" value={cep} onChange={(e) => setCep(e.target.value)} placeholder="Ex: 12345-678" disabled={isLoading}/>
+                </div>
+                 <div className="space-y-1">
+                    <Label htmlFor="cidade">Cidade</Label>
+                    <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: Cidade Exemplo" disabled={isLoading}/>
+                </div>
+            </div>
+            <div className="space-y-1">
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input id="complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} placeholder="Ex: Apto 101, Bloco B" disabled={isLoading}/>
+            </div>
+            <div className="space-y-1">
+                <Label htmlFor="referencia">Ponto de Referência</Label>
+                <Textarea id="referencia" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Ex: Próximo ao mercado, portão verde" rows={2} disabled={isLoading}/>
+            </div>
+          </CardContent>
+           <CardFooter className="border-t px-6 py-4 mt-6">
             <div className="flex justify-end gap-2 w-full">
                 <Button variant="outline" asChild type="button" disabled={isLoading}>
                     <Link href="/dashboard/cadastros/clientes">Cancelar</Link>
@@ -170,8 +240,8 @@ export default function NovoClientePage() {
                 </Button>
             </div>
           </CardFooter>
-        </form>
-      </Card>
+        </Card>
+      </form>
     </div>
   );
 }
