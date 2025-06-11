@@ -1,66 +1,68 @@
 
 "use client"
 
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-// ThemeToggle removed, it's now in its own page /dashboard/tema
+import { Building, ShieldCheck, Palette, Settings2 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold font-headline">Configurações Gerais</h1>
-        <p className="text-muted-foreground">Ajustes e preferências do seu restaurante.</p>
+        <h1 className="text-3xl font-bold font-headline">Configurações</h1>
+        <p className="text-muted-foreground">Gerencie todos os aspectos do seu restaurante e painel.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações do Restaurante</CardTitle>
-          <CardDescription>Estes dados podem ser movidos para "Perfil do Negócio" em breve.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="restaurantName">Nome do Restaurante</Label>
-            <Input id="restaurantName" placeholder="Nome do seu restaurante" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="restaurantAddress">Endereço</Label>
-            <Input id="restaurantAddress" placeholder="Endereço principal do restaurante" />
-          </div>
-          <Button>Salvar Informações</Button>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Conexões Externas (APIs)</CardTitle>
-          <CardDescription>Integre com outros serviços (ex: iFood, apps de delivery).</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div>
-              <Label htmlFor="ifood-integration" className="font-medium">Integração iFood</Label>
-              <p className="text-sm text-muted-foreground">
-                Sincronizar pedidos do iFood (requer configuração).
-              </p>
-            </div>
-            <Switch id="ifood-integration" />
-          </div>
-           <Button variant="outline" disabled>Configurar Integrações</Button>
-        </CardContent>
-      </Card>
-       <Card>
-        <CardHeader>
-          <CardTitle>Outras Configurações</CardTitle>
-          <CardDescription>Este é um espaço para outras configurações que não se encaixam nas novas seções "Perfil do Negócio", "Conta e Segurança" ou "Tema".</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-32 border border-dashed rounded-md">
-           <p className="text-muted-foreground">Mais configurações aqui...</p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="hover:shadow-lg hover:border-primary/50 transition-all">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Building className="h-6 w-6 text-primary"/> Perfil do Negócio</CardTitle>
+            <CardDescription>Dados do restaurante, horários, endereço, taxas de entrega.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard/perfil-negocio">Acessar Perfil</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-lg hover:border-primary/50 transition-all">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-primary"/> Conta e Segurança</CardTitle>
+            <CardDescription>Alterar senha, dados financeiros, preferências de segurança.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard/conta-seguranca">Acessar Segurança</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg hover:border-primary/50 transition-all">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Palette className="h-6 w-6 text-primary"/> Tema e Aparência</CardTitle>
+            <CardDescription>Logotipo, banner, cor principal do painel, tema claro/escuro.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard/tema">Personalizar Tema</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="md:col-span-2 lg:col-span-3 hover:shadow-lg hover:border-primary/50 transition-all">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Settings2 className="h-6 w-6 text-primary"/> Outras Configurações (Exemplo)</CardTitle>
+            <CardDescription>Espaço para futuras configurações como integrações, etc.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center h-32 border border-dashed rounded-md">
+             <p className="text-muted-foreground">Mais configurações avançadas aqui...</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
+
+    
