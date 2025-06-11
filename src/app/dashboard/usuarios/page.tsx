@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 interface Funcionario {
   id: string; 
   nome: string;
-  funcao: string; // Alterado de perfil para funcao
+  funcao: string;
   status: 'Ativo' | 'Inativo';
   dataCriacao?: Timestamp;
 }
@@ -139,27 +139,21 @@ export default function UsuariosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Função</TableHead> {/* Alterado de Perfil para Função */}
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead>Nome</TableHead><TableHead>Função</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {funcionarios.length > 0 ? (
                   funcionarios.map((func) => (
                     <TableRow key={func.id}>
-                      <TableCell className="font-medium">{func.nome}</TableCell>
-                      <TableCell>{func.funcao}</TableCell> {/* Exibir texto da funcao */}
-                      <TableCell>
+                      <TableCell className="font-medium">{func.nome}</TableCell><TableCell>{func.funcao}</TableCell><TableCell>
                         <Badge 
                             variant={getStatusBadgeVariant(func.status)}
                             className={func.status === 'Ativo' ? 'border-primary text-primary' : ''}
                         >
                             {func.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
+                      </TableCell><TableCell className="text-right">
                         <Button variant="ghost" size="icon" className="mr-1" onClick={() => handleEdit(func.id)}>
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Editar</span>
