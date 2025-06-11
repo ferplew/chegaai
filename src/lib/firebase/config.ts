@@ -2,8 +2,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore, type Firestore } from "firebase/firestore"; // Adicionado import do Firestore
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -20,6 +19,7 @@ const firebaseConfig = {
 // Initialize Firebase
 let app: FirebaseApp;
 let auth: Auth;
+let db: Firestore; // Declarada a variável db
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -27,5 +27,6 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 auth = getAuth(app);
+db = getFirestore(app); // Inicializado o Firestore
 
-export { app, auth, firebaseConfig };
+export { app, auth, db, firebaseConfig }; // Exportado o db
