@@ -91,6 +91,14 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
 
+    console.log("--- Iniciando autenticação via formulário ---");
+    console.log("Firebase Auth instance name:", auth.name);
+    console.log("Firebase Auth instance configured authDomain:", auth.config.authDomain);
+    if (typeof window !== "undefined") {
+      console.log("Current window.location.host (origem da requisição):", window.location.host);
+    }
+
+
     if (action === 'register') {
       if (password !== confirmPassword) {
         toast({
@@ -155,6 +163,7 @@ export default function LoginPage() {
           description: errorMessage,
           variant: "destructive",
         });
+        console.error("Erro no cadastro:", error);
       }
     } else { // Login
       try {
@@ -168,12 +177,15 @@ export default function LoginPage() {
         let errorMessage = "E-mail ou senha inválidos.";
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
            errorMessage = "E-mail ou senha incorretos. Verifique suas credenciais.";
+        } else if (error.code === 'auth/unauthorized-domain') {
+           errorMessage = "Domínio não autorizado. Verifique as configurações no Firebase Console.";
         }
         toast({
           title: "Erro de Login",
           description: errorMessage,
           variant: "destructive",
         });
+        console.error("Erro no login:", error);
       }
     }
     setIsLoading(false);
@@ -181,6 +193,13 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    console.log("--- Iniciando autenticação via Google ---");
+    console.log("Firebase Auth instance name:", auth.name);
+    console.log("Firebase Auth instance configured authDomain:", auth.config.authDomain);
+    if (typeof window !== "undefined") {
+      console.log("Current window.location.host (origem da requisição):", window.location.host);
+    }
+
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -190,18 +209,20 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Erro no login com Google:", error); 
+      console.error("Erro no login com Google (objeto completo):", error); 
 
-      let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google. Verifique o console para mais detalhes.";
+      let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google.";
 
       if (error.code === 'auth/popup-closed-by-user') {
         descriptionMessage = "A janela de login do Google foi fechada antes da conclusão.";
       } else if (error.code === 'auth/cancelled-popup-request') {
         descriptionMessage = "Múltiplas tentativas de login com o Google. Por favor, tente novamente.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        descriptionMessage = "Domínio não autorizado para login com Google. Verifique o Firebase Console.";
       } else if (error.code && error.message) {
         descriptionMessage = `Erro (${error.code}): ${error.message}.`;
       } else if (error.code) {
-        descriptionMessage = `Erro: ${error.code}. Consulte o console para mais detalhes.`;
+        descriptionMessage = `Erro: ${error.code}.`;
       } else if (error.message) {
         descriptionMessage = `Erro: ${error.message}.`;
       }
@@ -376,3 +397,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
