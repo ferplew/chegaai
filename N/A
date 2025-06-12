@@ -1,0 +1,5 @@
+
+1.  Extracted form logic from "novo" and "editar" pages (and other form-heavy pages) into separate, dynamically imported client components with `ssr: false` and `<Suspense>`.
+2.  Added `prefetch={false}` to sidebar navigation links.
+3.  Added `export const revalidate` to suitable static-like pages for Incremental Static Regeneration.
+4.  Refactored `suporte/page.tsx` to dynamically load the ticket form and keep FAQs static.

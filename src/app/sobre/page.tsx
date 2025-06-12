@@ -2,10 +2,12 @@
 import React from 'react'; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Zap, Users, ShieldCheck } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
+
+export const revalidate = 86400; // Revalidate once a day
 
 function OriginalSobrePage() {
   return (

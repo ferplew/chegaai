@@ -68,7 +68,7 @@ const settingsNavItems = [
 ];
 
 
-function DashboardSidebarComponent() {
+function OriginalDashboardSidebarComponent() {
   const pathname = usePathname();
   const sidebarContextValue = useSidebar(); 
   const router = useRouter();
@@ -108,7 +108,7 @@ function DashboardSidebarComponent() {
           aria-label={item.label}
           onClick={handleNavItemClick} 
         >
-          <Link href={item.href}>
+          <Link href={item.href} prefetch={false}>
             <item.icon className="h-5 w-5" />
             <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
           </Link>
@@ -121,7 +121,7 @@ function DashboardSidebarComponent() {
     <>
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between"> 
-          <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2">
+          <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2" prefetch={false}>
              <ChegaAiLogo className="h-8 text-primary" />
           </Link>
           {!isMobile && ( 
@@ -183,4 +183,4 @@ function DashboardSidebarComponent() {
   );
 }
 
-export const DashboardSidebar = React.memo(DashboardSidebarComponent);
+export const DashboardSidebar = React.memo(OriginalDashboardSidebarComponent);

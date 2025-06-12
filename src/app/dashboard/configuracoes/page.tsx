@@ -1,11 +1,11 @@
 
-"use client"
-
-import React from 'react'; // Adicionado React
+import React from 'react'; 
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, ShieldCheck, Palette, Settings2 } from "lucide-react";
+
+export const revalidate = 3600; // Revalidate every hour
 
 function OriginalConfiguracoesPage() {
   return (
@@ -68,4 +68,3 @@ function OriginalConfiguracoesPage() {
 
 const ConfiguracoesPage = React.memo(OriginalConfiguracoesPage);
 export default ConfiguracoesPage;
-    

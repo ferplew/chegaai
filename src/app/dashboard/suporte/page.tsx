@@ -1,15 +1,26 @@
 
-"use client";
-
-import React, { useState, type FormEvent } from 'react'; // Adicionado React
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import dynamic from 'next/dynamic';
+import React, { Suspense } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useToast } from "@/hooks/use-toast";
-import { LifeBuoy, Send, HelpCircle, MessageSquare, Loader2 } from "lucide-react";
+import { LifeBuoy, HelpCircle, Loader2 } from "lucide-react";
+
+const SuporteTicketForm = dynamic(() => import('@/components/dashboard/forms/SuporteTicketForm'), {
+  ssr: false,
+  loading: () => (
+    <Card className="lg:col-span-1">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Loader2 className="h-5 w-5 text-primary animate-spin"/> Carregando Formulário...</CardTitle>
+        <CardDescription>Aguarde um momento.</CardHeader>
+      </CardHeader>
+      <CardContent className="h-48 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </CardContent>
+    </Card>
+  ),
+});
+
+export const revalidate = 86400; // Revalidate once a day for FAQ content
 
 const faqItems = [
   {
@@ -40,37 +51,6 @@ const faqItems = [
 ];
 
 function OriginalSuportePage() {
-  const { toast } = useToast();
-  const [ticketAssunto, setTicketAssunto] = useState('');
-  const [ticketDescricao, setTicketDescricao] = useState('');
-  const [isSendingTicket, setIsSendingTicket] = useState(false);
-
-  const handleTicketSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSendingTicket(true);
-
-    if (!ticketAssunto.trim() || !ticketDescricao.trim()) {
-      toast({ title: "Campos obrigatórios", description: "Assunto e Descrição são necessários para abrir um ticket.", variant: "destructive" });
-      setIsSendingTicket(false);
-      return;
-    }
-
-    // Simulação de envio de ticket
-    // TODO: Implementar lógica de salvamento no Firestore ou envio para sistema de help desk
-    
-    // Aguardar um pouco para simular processamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    toast({
-      title: "Ticket Enviado!",
-      description: "Sua solicitação foi registrada. Entraremos em contato em breve.",
-    });
-
-    setTicketAssunto('');
-    setTicketDescricao('');
-    setIsSendingTicket(false);
-  };
-
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-3">
@@ -107,54 +87,19 @@ function OriginalSuportePage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5 text-primary"/> Abrir Ticket de Suporte</CardTitle>
-            <CardDescription>Não encontrou sua resposta? Envie-nos uma mensagem.</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleTicketSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="ticketAssunto">Assunto <span className="text-destructive">*</span></Label>
-                <Input
-                  id="ticketAssunto"
-                  value={ticketAssunto}
-                  onChange={(e) => setTicketAssunto(e.target.value)}
-                  placeholder="Ex: Dúvida sobre relatórios"
-                  required
-                  disabled={isSendingTicket}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="ticketDescricao">Descrição Detalhada <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="ticketDescricao"
-                  value={ticketDescricao}
-                  onChange={(e) => setTicketDescricao(e.target.value)}
-                  placeholder="Descreva seu problema ou dúvida com o máximo de detalhes possível..."
-                  rows={5}
-                  required
-                  disabled={isSendingTicket}
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" className="w-full" disabled={isSendingTicket}>
-                {isSendingTicket ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Enviar Ticket
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+        <Suspense fallback={
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Loader2 className="h-5 w-5 text-primary animate-spin"/> Carregando Formulário...</CardTitle>
+                    <CardDescription>Aguarde um momento.</CardHeader>
+                </CardHeader>
+                <CardContent className="h-48 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </CardContent>
+            </Card>
+        }>
+          <SuporteTicketForm />
+        </Suspense>
       </div>
     </div>
   );
