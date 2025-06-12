@@ -9,7 +9,7 @@ import { AnimatedPanelIcon } from '@/components/icons/AnimatedPanelIcon';
 import { Footer } from '@/components/layout/Footer';
 import {
   Package, BarChart3, History, MonitorSmartphone, Users, Lock, SunMoon,
-  Sparkles, Cloud, RefreshCw, BadgePercent, MinusCircle, LayoutGrid, Calculator, TrendingUp, Clock, UserPlus, PlusCircle, LayoutDashboard
+  Sparkles, Cloud, RefreshCw, BadgePercent, MinusCircle, LayoutGrid, Calculator, TrendingUp, Clock, UserPlus, PlusCircle, LayoutDashboard, Settings // Adicionado LayoutDashboard e Settings
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
@@ -76,7 +76,6 @@ export default function LandingPage() {
           <Link href="/" aria-label="Página Inicial Chega Aí">
             <ChegaAiLogo className="h-10 text-primary" />
           </Link>
-          {/* Navigation removed from here */}
         </div>
       </header>
 
@@ -106,7 +105,7 @@ export default function LandingPage() {
         </section>
 
         {/* Sobre o Chega Aí */}
-        <section className="py-16 md:py-24 bg-background/90">
+        <section id="sobre" className="py-16 md:py-24 bg-background/90">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline mb-6">Tecnologia feita para restaurantes que querem <span className="text-primary">ir além</span>.</h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-4">
@@ -139,7 +138,7 @@ export default function LandingPage() {
         </section>
 
         {/* Diferenciais */}
-        <section className="py-16 md:py-24 bg-background/90">
+        <section id="termos" className="py-16 md:py-24 bg-background/90"> {/* ID movido para "Diferenciais" para o link de Termos */}
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12"><span className="text-primary">Diferenciais</span> que impulsionam seu negócio</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -171,7 +170,7 @@ export default function LandingPage() {
         </section>
 
         {/* Etapas de Uso */}
-        <section className="py-16 md:py-24 bg-background/90">
+        <section id="suporte" className="py-16 md:py-24 bg-background/90"> {/* ID movido para "Etapas de Uso" para o link de Suporte */}
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-16">Comece a usar em <span className="text-primary">4 passos</span> simples</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 relative">
@@ -211,16 +210,20 @@ export default function LandingPage() {
         <section className="py-16 md:py-24 bg-gradient-to-br from-background to-card text-center relative overflow-hidden">
            <div className="absolute inset-0 opacity-10 animate-gradient-bg" style={{ background: 'linear-gradient(-45deg, hsl(var(--primary)), hsl(var(--background)), hsl(var(--accent)), hsl(var(--background)))', backgroundSize: '400% 400%' }}></div>
           <div className="container mx-auto px-4 z-10">
-            <h2 className="text-3xl md:text-5xl font-bold font-headline mb-4">Gerencie melhor. Cresça mais. <span className="text-primary">Chega Aí.</span></h2>
+            <h2 className="text-3xl md:text-5xl font-bold font-headline mb-4 flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
+              <Link href="/login" className="inline-flex items-center hover:text-primary/80 transition-colors">
+                <LayoutDashboard className="h-7 w-7 md:h-10 md:w-10 mr-2" /> Gerencie melhor.
+              </Link>
+              <Link href="/login" className="inline-flex items-center hover:text-primary/80 transition-colors">
+                <TrendingUp className="h-7 w-7 md:h-10 md:w-10 mr-2" /> Cresça mais.
+              </Link>
+              <Link href="/login?action=register" className="inline-flex items-center text-primary hover:text-primary/80 transition-colors">
+                <ChegaAiLogo className="h-10 md:h-12 mr-1" />
+                Chega Aí.
+              </Link>
+            </h2>
             <p className="text-lg text-muted-foreground mb-10">Experimente agora sem custo e transforme a gestão do seu restaurante.</p>
-            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto" asChild>
-                <Link href="/login?action=register">Cadastrar meu restaurante</Link>
-              </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
-                <Link href="/login">Acessar o painel</Link>
-              </Button>
-            </div>
+            {/* Botões removidos daqui */}
           </div>
         </section>
       </main>
@@ -229,3 +232,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
