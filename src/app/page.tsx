@@ -139,7 +139,7 @@ export default function LandingPage() {
         </section>
 
         {/* Diferenciais */}
-        <section id="diferenciais" className="py-16 md:py-24 bg-background/90">
+        <section id="termos" className="py-16 md:py-24 bg-background/90"> {/* ID 'termos' adicionado aqui */}
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12"><span className="text-primary">Diferenciais</span> que impulsionam seu negócio</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -171,7 +171,7 @@ export default function LandingPage() {
         </section>
 
         {/* Etapas de Uso */}
-        <section id="etapas" className="py-16 md:py-24 bg-background/90">
+        <section id="suporte" className="py-16 md:py-24 bg-background/90"> {/* ID 'suporte' adicionado aqui */}
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-16">Comece a usar em <span className="text-primary">4 passos</span> simples</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 relative">
@@ -229,3 +229,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
