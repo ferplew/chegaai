@@ -106,7 +106,7 @@ export default function LandingPage() {
         </section>
 
         {/* Sobre o Chega Aí */}
-        <section id="sobre" className="py-16 md:py-24 bg-background/90">
+        <section className="py-16 md:py-24 bg-background/90">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline mb-6">Tecnologia feita para restaurantes que querem <span className="text-primary">ir além</span>.</h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-4">
@@ -119,7 +119,7 @@ export default function LandingPage() {
         </section>
 
         {/* Funcionalidades */}
-        <section id="funcionalidades" className="py-16 md:py-24 bg-background">
+        <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12">O que o <span className="text-primary">Chega Aí</span> oferece?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -139,7 +139,7 @@ export default function LandingPage() {
         </section>
 
         {/* Diferenciais */}
-        <section id="termos" className="py-16 md:py-24 bg-background/90"> {/* ID 'termos' adicionado aqui */}
+        <section className="py-16 md:py-24 bg-background/90">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-12"><span className="text-primary">Diferenciais</span> que impulsionam seu negócio</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -154,7 +154,7 @@ export default function LandingPage() {
         </section>
         
         {/* Resultados que importam */}
-        <section id="resultados" className="py-16 md:py-24 bg-background">
+        <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline mb-12">Resultados visíveis desde o <span className="text-primary">primeiro dia</span>.</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -171,7 +171,7 @@ export default function LandingPage() {
         </section>
 
         {/* Etapas de Uso */}
-        <section id="suporte" className="py-16 md:py-24 bg-background/90"> {/* ID 'suporte' adicionado aqui */}
+        <section className="py-16 md:py-24 bg-background/90">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-center mb-16">Comece a usar em <span className="text-primary">4 passos</span> simples</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 relative">
@@ -192,7 +192,7 @@ export default function LandingPage() {
         </section>
 
         {/* Depoimento */}
-        <section id="depoimento" className="py-16 md:py-24 bg-background">
+        <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 max-w-3xl text-center">
             <div className="bg-card p-8 md:p-12 rounded-xl shadow-xl">
               <svg className="w-16 h-16 rounded-full mx-auto mb-6 text-primary bg-primary/10 p-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -229,4 +229,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

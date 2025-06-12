@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 
@@ -11,9 +12,9 @@ export function Footer() {
           </div>
           
           <nav className="flex justify-center space-x-6 text-muted-foreground">
-            <Link href="#sobre" className="hover:text-primary transition-colors">Sobre</Link>
-            <Link href="#suporte" className="hover:text-primary transition-colors">Suporte</Link>
-            <Link href="#termos" className="hover:text-primary transition-colors">Termos</Link>
+            <Link href="/sobre" className="hover:text-primary transition-colors">Sobre</Link>
+            <Link href="/suporte" className="hover:text-primary transition-colors">Suporte</Link>
+            <Link href="/termos" className="hover:text-primary transition-colors">Termos</Link>
           </nav>
 
           <div className="text-center md:text-right text-sm text-muted-foreground">
