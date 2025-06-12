@@ -15,21 +15,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
 interface Funcionario {
-  id: string; 
+  id: string;
   nome: string;
   funcao: string;
   status: 'Ativo' | 'Inativo';
   dataCriacao?: Timestamp;
 }
 
-function getStatusBadgeVariant(status: string): "default" | "destructive" | "secondary" {
+// Correção: Adicionado "outline" ao tipo de retorno, pois Badge aceita essa variante.
+function getStatusBadgeVariant(status: string): "default" | "destructive" | "secondary" | "outline" {
     switch (status?.toLowerCase()) {
       case 'ativo':
-        return 'default'; 
+        return 'default';
       case 'inativo':
-        return 'secondary'; 
+        return 'secondary';
       default:
-        return 'outline';
+        return 'outline'; // Agora é um valor válido conforme o tipo de retorno.
     }
 }
 
@@ -47,7 +48,7 @@ function OriginalUsuariosPage() {
   useEffect(() => {
     setIsLoading(true);
     const funcionariosCollectionRef = collection(db, 'funcionarios');
-    const q = query(funcionariosCollectionRef, orderBy('nome', 'asc')); 
+    const q = query(funcionariosCollectionRef, orderBy('nome', 'asc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const funcionariosData: Funcionario[] = [];
@@ -66,7 +67,7 @@ function OriginalUsuariosPage() {
 
     return () => unsubscribe();
   }, [toast]);
-  
+
   const handleEdit = (id: string) => {
     toast({ title: "Em breve", description: `Funcionalidade de editar funcionário ${id} será implementada.`});
   }
@@ -78,8 +79,8 @@ function OriginalUsuariosPage() {
 
   const handleConfirmDelete = async () => {
     if (!funcionarioToDelete) return;
-    setIsDeleting(true); 
-    
+    setIsDeleting(true);
+
     try {
       await deleteDoc(doc(db, 'funcionarios', funcionarioToDelete.id));
       toast({
@@ -148,7 +149,7 @@ function OriginalUsuariosPage() {
                   funcionarios.map((func) => (
                     <TableRow key={func.id}>
                       <TableCell className="font-medium">{func.nome}</TableCell><TableCell>{func.funcao}</TableCell><TableCell>
-                        <Badge 
+                        <Badge
                             variant={getStatusBadgeVariant(func.status)}
                             className={func.status === 'Ativo' ? 'border-primary text-primary' : ''}
                         >

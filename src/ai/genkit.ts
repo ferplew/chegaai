@@ -2,34 +2,38 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
-const GEMINI_API_KEY_PLACEHOLDER = "AIzaSyCBWJQH6K_ZPdjzGZKBuYw9m3fYbhQhjso";
-// Prioritize environment variable, fallback to placeholder only if env var is not set.
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || GEMINI_API_KEY_PLACEHOLDER;
+const rawApiKeyFromEnv = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-if (!GEMINI_API_KEY || GEMINI_API_KEY === GEMINI_API_KEY_PLACEHOLDER) {
-  const warningMessage =
+// Log para ajudar na depuração - aparecerá no console do servidor Next.js
+if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') { // Evitar log em produção, mas útil para dev
+    console.log(`[Genkit Init Debug] Raw NEXT_PUBLIC_GEMINI_API_KEY from env: "${rawApiKeyFromEnv}" (Type: ${typeof rawApiKeyFromEnv})`);
+}
+
+const GEMINI_API_KEY_PLACEHOLDER = "AIzaSyCBWJQH6K_ZPdjzGZKBuYw9m3fYbhQhjso";
+// Prioritize environment variable, fallback to placeholder only if env var is not set or is empty.
+const GEMINI_API_KEY = rawApiKeyFromEnv || GEMINI_API_KEY_PLACEHOLDER;
+
+if (!rawApiKeyFromEnv || rawApiKeyFromEnv === GEMINI_API_KEY_PLACEHOLDER) {
+  let warningMessage =
     '*********************************************************************\n' +
-    'CRITICAL WARNING: Gemini API key is NOT CONFIGURED or is a PLACEHOLDER.\n' +
-    'AI features requiring the Gemini API WILL FAIL, likely causing Internal Server Errors.\n' +
-    'Please set a valid NEXT_PUBLIC_GEMINI_API_KEY in your .env.local file.\n' +
-    'Example: NEXT_PUBLIC_GEMINI_API_KEY=AIzaYourActualApiKey...\n' +
-    'After setting it, RESTART your development/production server.\n' +
+    'ALERTA CRÍTICO: A chave da API Gemini NÃO ESTÁ CONFIGURADA ou é um VALOR PADRÃO.\n' +
+    'As funcionalidades de IA que requerem a API Gemini FALHARÃO, provavelmente causando Erros Internos do Servidor (Internal Server Errors).\n' +
+    'Por favor, defina uma NEXT_PUBLIC_GEMINI_API_KEY válida no seu arquivo .env.local.\n' +
+    'Exemplo: NEXT_PUBLIC_GEMINI_API_KEY=AIzaSuaChaveDeAPIAqui...\n' +
+    'Após configurar, REINICIE seu servidor de desenvolvimento/produção.\n' +
+    'Verifique os logs do servidor para mensagens de erro detalhadas se o problema persistir.\n' +
     '*********************************************************************';
+
+  if (!rawApiKeyFromEnv) {
+    warningMessage = warningMessage.replace('NÃO ESTÁ CONFIGURADA ou é um VALOR PADRÃO', 'NÃO ESTÁ CONFIGURADA (está faltando ou vazia)');
+  } else if (rawApiKeyFromEnv === GEMINI_API_KEY_PLACEHOLDER) {
+    warningMessage = warningMessage.replace('NÃO ESTÁ CONFIGURADA ou é um VALOR PADRÃO', 'está definida com o VALOR PADRÃO (placeholder)');
+  }
   
   if (typeof window === 'undefined') { // Server-side
-    console.error(warningMessage); // Use console.error for higher visibility
-  } else { // Client-side (less likely for this init, but for completeness)
+    console.error(warningMessage); // Use console.error para maior visibilidade
+  } else { // Client-side (menos provável para esta inicialização, mas para completar)
     console.warn(warningMessage);
-  }
-} else if (process.env.NEXT_PUBLIC_GEMINI_API_KEY === GEMINI_API_KEY_PLACEHOLDER && GEMINI_API_KEY === GEMINI_API_KEY_PLACEHOLDER){
-  // This case means NEXT_PUBLIC_GEMINI_API_KEY was explicitly set to the placeholder.
-   const specificWarning =
-    '*********************************************************************\n' +
-    'CRITICAL WARNING: NEXT_PUBLIC_GEMINI_API_KEY in .env.local is SET TO THE PLACEHOLDER value.\n' +
-    'AI features WILL FAIL. Please use a valid API key and RESTART your server.\n' +
-    '*********************************************************************';
-  if (typeof window === 'undefined') {
-    console.error(specificWarning);
   }
 }
 
