@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import EditarEnderecoClient from "./EditarEnderecoClient";
 
+// Tipando 'params' diretamente na assinatura da função da página
 export default function EditarEnderecoPage({
   params,
 }: {
