@@ -5,7 +5,7 @@ import React, { useEffect, useState, Suspense } from 'react'; // Adicionado Susp
 import Link from "next/link";
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table"; // Mantido para skeleton
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Corrigido: TableHead adicionado
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, DollarSign, Clock, Loader2, PlusCircle, Info } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
