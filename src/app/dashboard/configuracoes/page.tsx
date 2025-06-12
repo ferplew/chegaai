@@ -1,12 +1,13 @@
 
 "use client"
 
+import React from 'react'; // Adicionado React
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, ShieldCheck, Palette, Settings2 } from "lucide-react";
 
-export default function ConfiguracoesPage() {
+function OriginalConfiguracoesPage() {
   return (
     <div className="space-y-6">
       <div>
@@ -65,4 +66,6 @@ export default function ConfiguracoesPage() {
   );
 }
 
+const ConfiguracoesPage = React.memo(OriginalConfiguracoesPage);
+export default ConfiguracoesPage;
     

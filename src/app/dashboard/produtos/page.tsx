@@ -1,12 +1,13 @@
 
-"use client"; // Adicionado para usar Link do Next.js
+"use client";
 
+import React from 'react'; // Adicionado React
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
-export default function ItensPage() {
+function OriginalItensPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -37,3 +38,6 @@ export default function ItensPage() {
     </div>
   );
 }
+
+const ItensPage = React.memo(OriginalItensPage);
+export default ItensPage;

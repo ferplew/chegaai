@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react'; // Adicionado React
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 
-export default function TermosPage() {
+function OriginalTermosPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 shadow-sm backdrop-blur-sm">
@@ -85,3 +86,6 @@ export default function TermosPage() {
     </div>
   );
 }
+
+const TermosPage = React.memo(OriginalTermosPage);
+export default TermosPage;

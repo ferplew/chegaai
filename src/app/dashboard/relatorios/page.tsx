@@ -1,10 +1,13 @@
 
+"use client"; // Adicionado para uso de DatePickerWithRange que é client-side
+
+import React from "react"; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Calendar } from "lucide-react";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 
-export default function RelatoriosPage() {
+function OriginalRelatoriosPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -61,3 +64,6 @@ export default function RelatoriosPage() {
     </div>
   );
 }
+
+const RelatoriosPage = React.memo(OriginalRelatoriosPage);
+export default RelatoriosPage;

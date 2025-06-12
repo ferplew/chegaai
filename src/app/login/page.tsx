@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, type FormEvent, useEffect, Suspense } from 'react'; // Adicionado Suspense
+import React, { useState, type FormEvent, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -24,12 +24,12 @@ import {
 } from 'firebase/auth';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
-import { Loader2 } from 'lucide-react'; // Para o fallback
+import { Loader2 } from 'lucide-react';
 
 // Componente interno que contém a lógica do formulário e usa useSearchParams
-function LoginFormContent() {
+function OriginalLoginFormContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // Hook usado aqui
+  const searchParams = useSearchParams();
   
   const [action, setAction] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -50,7 +50,7 @@ function LoginFormContent() {
         if (actionFromParams === 'register') {
             setAction('register');
         } else {
-            setAction('login'); // Default para login se o parâmetro não for 'register' ou não estiver presente
+            setAction('login'); 
         }
     }
   }, [searchParams]);
@@ -58,7 +58,7 @@ function LoginFormContent() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      if (user && action === 'login') { // Só redireciona se a intenção era login e o usuário logou
+      if (user && action === 'login') {
         // router.push('/dashboard'); 
       }
     });
@@ -137,7 +137,6 @@ function LoginFormContent() {
         await createUserWithEmailAndPassword(auth, email, password);
         toast({ title: "Cadastro realizado!", description: "Você já pode fazer login." });
         setAction('login'); 
-        // clearAllFields(); // Não limpar campos, pode ser útil se o usuário precisar corrigir algo pequeno
       } catch (error) {
         const authError = error as AuthError;
         let errorMessage = "Ocorreu um erro durante o cadastro.";
@@ -249,13 +248,14 @@ function LoginFormContent() {
               Esqueci minha senha
             </Link>
           )}
-          <button onClick={() => { setAction(action === 'login' ? 'register' : 'login'); /* clearAllFields(); */ }} className="text-muted-foreground hover:text-primary transition-colors">
+          <button onClick={() => { setAction(action === 'login' ? 'register' : 'login'); }} className="text-muted-foreground hover:text-primary transition-colors">
             {action === 'login' ? 'Ainda não tem conta? Cadastre seu restaurante' : 'Já tem uma conta? Acesse o painel'}
           </button>
         </CardFooter>
       </Card>
   );
 }
+const LoginFormContent = React.memo(OriginalLoginFormContent);
 
 // Componente da página exportado por padrão, envolvendo LoginFormContent com Suspense
 export default function LoginPage() {
@@ -279,5 +279,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

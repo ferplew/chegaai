@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react'; // Adicionado React
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,7 +33,7 @@ const faqItems = [
   },
 ];
 
-export default function SuportePage() {
+function OriginalSuportePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 shadow-sm backdrop-blur-sm">
@@ -134,3 +135,6 @@ export default function SuportePage() {
     </div>
   );
 }
+
+const SuportePage = React.memo(OriginalSuportePage);
+export default SuportePage;
