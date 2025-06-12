@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, useEffect, use } from 'react'; // Added 'use'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from "@/hooks/use-toast";
-import { auth } from '@/lib/firebase/config'; // Import auth from your Firebase config
+import { auth } from '@/lib/firebase/config';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -25,10 +25,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
 
-export default function LoginPage() {
+function OriginalLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialAction = searchParams.get('action') === 'register' ? 'register' : 'login';
+  
+  // Unwrap searchParams using React.use() before accessing its properties
+  const unwrappedSearchParams = use(searchParams);
+  const initialAction = unwrappedSearchParams.get('action') === 'register' ? 'register' : 'login';
+  
   const [action, setAction] = useState<'login' | 'register'>(initialAction);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,13 +111,11 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-      // Check documentError state first for real-time validation feedback
       if (documentError) {
         toast({ title: "Erro de Cadastro", description: documentError, variant: "destructive" });
         setIsLoading(false);
         return;
       }
-      // Then, perform final validation on submit
       const cleanedDocumentValue = documentValue.replace(/[^\d]/g, '');
       if (documentType === 'cpf') {
         if (!isValidCPF(cleanedDocumentValue) || cleanedDocumentValue.length !== 11) {
@@ -157,9 +159,8 @@ export default function LoginPage() {
           description: errorMessage,
           variant: "destructive",
         });
-        console.error("Erro no cadastro:", authError);
       }
-    } else { // Login
+    } else { 
       try {
         await signInWithEmailAndPassword(auth, email, password);
         toast({
@@ -180,7 +181,6 @@ export default function LoginPage() {
           description: errorMessage,
           variant: "destructive",
         });
-        console.error("Erro no login:", authError);
       }
     }
     setIsLoading(false);
@@ -198,8 +198,6 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error) {
       const authError = error as AuthError;
-      console.error("Erro no login com Google (objeto completo):", authError); 
-
       let descriptionMessage = "Ocorreu um erro desconhecido ao tentar fazer login com o Google.";
 
       if (authError.code === 'auth/popup-closed-by-user') {
@@ -384,3 +382,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+const LoginPage = React.memo(OriginalLoginPage);
+export default LoginPage;
