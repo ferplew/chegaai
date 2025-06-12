@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent, use } from 'react'; 
+import React, { useState, useEffect, type FormEvent } from 'react'; 
 import Link from "next/link";
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,7 @@ interface EnderecoFormData {
 
 function OriginalEditarEnderecoPage() {
   const params = useParams();
-  const unwrappedParams = use(params); // Unwrap params
-  const enderecoId = unwrappedParams.enderecoId as string;
+  const enderecoId = params.enderecoId as string; // Acesso direto
   const router = useRouter();
   const { toast } = useToast();
 
@@ -144,7 +143,7 @@ function OriginalEditarEnderecoPage() {
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground">
-                    O endereço com ID <span className="font-semibold text-primary">{enderecoId}</span> não foi encontrado ou não pôde ser carregado.
+                    O endereço com ID <span className="font-semibold text-primary">{typeof enderecoId === 'string' ? enderecoId.substring(0,7) : 'N/A'}...</span> não foi encontrado ou não pôde ser carregado.
                 </p>
                 <p className="text-muted-foreground mt-2">
                 Verifique se o ID está correto ou <Link href="/dashboard/enderecos" className="text-primary hover:underline">volte para a lista de endereços</Link>.

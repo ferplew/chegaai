@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent, use } from 'react'; 
+import React, { useState, useEffect, type FormEvent } from 'react'; 
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
 import { doc, getDoc, updateDoc, serverTimestamp, Timestamp, type FirestoreError } from 'firebase/firestore';
@@ -28,8 +28,7 @@ interface PedidoFormData {
 
 function OriginalEditarPedidoPage() {
   const params = useParams();
-  const unwrappedParams = use(params); // Unwrap params
-  const pedidoId = unwrappedParams.pedidoId as string;
+  const pedidoId = params.pedidoId as string; // Acesso direto
   const router = useRouter();
   const { toast } = useToast();
 
