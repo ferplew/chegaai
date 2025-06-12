@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, type FormEvent, useEffect, use } from 'react';
+import React, { useState, type FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,6 @@ import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
 function OriginalLoginPage() {
   const router = useRouter();
   const searchParamsFromHook = useSearchParams();
-  const unwrappedSearchParams = use(searchParamsFromHook);
   
   const [action, setAction] = useState<'login' | 'register'>('login'); // Default to 'login'
   const [email, setEmail] = useState('');
@@ -44,12 +43,12 @@ function OriginalLoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Determine initial action based on unwrapped params once component has mounted/params are ready
-    if (unwrappedSearchParams) {
-      const actionFromParams = unwrappedSearchParams.get('action') === 'register' ? 'register' : 'login';
+    // Determine initial action based on searchParamsFromHook once component has mounted/params are ready
+    if (searchParamsFromHook) {
+      const actionFromParams = searchParamsFromHook.get('action') === 'register' ? 'register' : 'login';
       setAction(actionFromParams);
     }
-  }, [unwrappedSearchParams]);
+  }, [searchParamsFromHook]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
