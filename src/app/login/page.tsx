@@ -1,9 +1,9 @@
 
 "use client";
 
+import React, { useState, type FormEvent, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent, useEffect, use } from 'react'; // Added 'use'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,13 +27,10 @@ import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
 
 function OriginalLoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParamsFromHook = useSearchParams();
+  const unwrappedSearchParams = use(searchParamsFromHook);
   
-  // Unwrap searchParams using React.use() before accessing its properties
-  const unwrappedSearchParams = use(searchParams);
-  const initialAction = unwrappedSearchParams.get('action') === 'register' ? 'register' : 'login';
-  
-  const [action, setAction] = useState<'login' | 'register'>(initialAction);
+  const [action, setAction] = useState<'login' | 'register'>('login'); // Default to 'login'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,6 +42,14 @@ function OriginalLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Determine initial action based on unwrapped params once component has mounted/params are ready
+    if (unwrappedSearchParams) {
+      const actionFromParams = unwrappedSearchParams.get('action') === 'register' ? 'register' : 'login';
+      setAction(actionFromParams);
+    }
+  }, [unwrappedSearchParams]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
