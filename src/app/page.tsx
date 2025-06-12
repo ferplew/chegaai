@@ -2,17 +2,20 @@
 "use client"; // Necessário para useState e useEffect
 
 import Link from 'next/link';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
-import { AnimatedPanelIcon } from '@/components/icons/AnimatedPanelIcon';
-import { Footer } from '@/components/layout/Footer';
+import { AnimatedPanelIcon as OriginalAnimatedPanelIcon } from '@/components/icons/AnimatedPanelIcon';
+import { Footer as OriginalFooter } from '@/components/layout/Footer';
 import {
   Package, BarChart3, History, MonitorSmartphone, Users, Lock, SunMoon,
   Sparkles, Cloud, RefreshCw, BadgePercent, MinusCircle, LayoutGrid, Calculator, TrendingUp, Clock, UserPlus, PlusCircle, LayoutDashboard, Settings, LogIn
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
+
+const AnimatedPanelIcon = React.memo(OriginalAnimatedPanelIcon);
+const Footer = React.memo(OriginalFooter);
 
 const features = [
   { icon: <Package className="w-8 h-8 text-primary" />, title: "Cadastro e controle de pedidos", description: "Gerencie todos os seus pedidos de forma simples e organizada." },
@@ -232,3 +235,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
