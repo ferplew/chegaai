@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, type FormEvent, useEffect } from 'react'; // Adicionado React
+import React, { useState, type FormEvent, useEffect, useCallback } from 'react'; 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -82,7 +82,7 @@ function OriginalNovoItemPage() {
   }, [imagemUrl, imagemArquivo, aiGeneratedImage]);
 
 
-  const handleSuggestDetails = async () => {
+  const handleSuggestDetails = useCallback(async () => {
     if (!aiKeywords.trim()) {
       toast({ title: "Palavras-chave vazias", description: "Digite algumas palavras-chave para a IA.", variant: "destructive" });
       return;
@@ -103,19 +103,19 @@ function OriginalNovoItemPage() {
     } finally {
       setIsLoadingAiSuggestions(false);
     }
-  };
+  }, [aiKeywords, toast]);
 
-  const handleApplyAiTitle = (title: string) => {
+  const handleApplyAiTitle = useCallback((title: string) => {
     setNome(title);
     setSelectedAiTitle(title);
-  };
+  }, []);
 
-  const handleApplyAiDescription = (description: string) => {
+  const handleApplyAiDescription = useCallback((description: string) => {
     setDescricao(description);
     setSelectedAiDescription(description);
-  };
+  }, []);
 
-  const handleGenerateImage = async () => {
+  const handleGenerateImage = useCallback(async () => {
     if (!nome.trim()) {
       toast({ title: "Nome do item vazio", description: "Digite um nome para o item antes de gerar a imagem.", variant: "destructive" });
       return;
@@ -138,9 +138,9 @@ function OriginalNovoItemPage() {
     } finally {
       setIsLoadingAiImage(false);
     }
-  };
+  }, [nome, toast]);
   
-  const handleAddAdicional = () => {
+  const handleAddAdicional = useCallback(() => {
     if (!novoAdicionalNome.trim()) {
       toast({ title: "Nome do adicional vazio", variant: "destructive" });
       return;
@@ -149,16 +149,16 @@ function OriginalNovoItemPage() {
       toast({ title: "Valor do adicional inválido", variant: "destructive" });
       return;
     }
-    setAdicionais([...adicionais, { id: Date.now().toString(), nome: novoAdicionalNome.trim(), valor: Number(novoAdicionalValor) }]);
+    setAdicionais(prevAdicionais => [...prevAdicionais, { id: Date.now().toString(), nome: novoAdicionalNome.trim(), valor: Number(novoAdicionalValor) }]);
     setNovoAdicionalNome('');
     setNovoAdicionalValor('');
-  };
+  }, [novoAdicionalNome, novoAdicionalValor, toast]);
 
-  const handleRemoveAdicional = (idToRemove: string) => {
-    setAdicionais(adicionais.filter(adicional => adicional.id !== idToRemove));
-  };
+  const handleRemoveAdicional = useCallback((idToRemove: string) => {
+    setAdicionais(prevAdicionais => prevAdicionais.filter(adicional => adicional.id !== idToRemove));
+  }, []);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNome('');
     setDescricao('');
     setValor('');
@@ -175,12 +175,12 @@ function OriginalNovoItemPage() {
     setSelectedAiTitle(null);
     setSelectedAiDescription(null);
     setAiGeneratedImage(null);
-  };
+  }, []);
 
-  const getFinalImageUrl = async (): Promise<string | null> => {
+  const getFinalImageUrl = useCallback(async (): Promise<string | null> => {
     const imageNamePrefix = nome.trim().toLowerCase().replace(/\s+/g, '_') || 'item';
     
-    if (aiGeneratedImage) { // AI-generated image (data URI)
+    if (aiGeneratedImage) { 
       try {
         const imageRef = storageRef(storage, `produtos/${imageNamePrefix}_ai_${Date.now()}.png`);
         const uploadResult = await uploadString(imageRef, aiGeneratedImage, 'data_url');
@@ -191,7 +191,7 @@ function OriginalNovoItemPage() {
         toast({ title: "Erro no Upload", description: "Falha ao salvar imagem da IA.", variant: "destructive" });
         return null;
       }
-    } else if (imagemArquivo) { // User uploaded file
+    } else if (imagemArquivo) { 
       try {
         const imageRef = storageRef(storage, `produtos/${imageNamePrefix}_file_${Date.now()}_${imagemArquivo.name}`);
         const uploadTask = uploadBytesResumable(imageRef, imagemArquivo);
@@ -217,14 +217,14 @@ function OriginalNovoItemPage() {
         toast({ title: "Erro no Upload", description: "Exceção ao salvar imagem carregada.", variant: "destructive" });
         return null;
       }
-    } else if (imagemUrl.trim()) { // Manual URL
+    } else if (imagemUrl.trim()) { 
       return imagemUrl.trim();
     }
-    return null; // No image
-  };
+    return null; 
+  }, [nome, aiGeneratedImage, imagemArquivo, imagemUrl, toast]);
 
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSaving(true);
 
@@ -249,11 +249,11 @@ function OriginalNovoItemPage() {
         descricao: descricao.trim(),
         valor: Number(valor),
         categoria,
-        adicionais: adicionais.map(({ id, ...rest }) => rest), // Remove o 'id' temporário do cliente
-        imagemUrl: imagemFinalUrl, // URL final da imagem (do Storage ou manual)
-        foiGeradoPorIA: !!aiGeneratedImage && imagemFinalUrl?.includes('_ai_'), // Check if the final URL is from AI
+        adicionais: adicionais.map(({ id, ...rest }) => rest), 
+        imagemUrl: imagemFinalUrl, 
+        foiGeradoPorIA: !!aiGeneratedImage && imagemFinalUrl?.includes('_ai_'), 
         dataCriacao: serverTimestamp(),
-        ativo: true, // Default to active
+        ativo: true, 
       };
 
       const produtosCollectionRef = collection(db, 'produtos');
@@ -278,7 +278,7 @@ function OriginalNovoItemPage() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [nome, descricao, valor, categoria, adicionais, aiGeneratedImage, getFinalImageUrl, resetForm, router, toast]);
 
   return (
     <div className="space-y-6 mb-12">

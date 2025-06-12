@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, type FormEvent } from 'react'; // Adicionado React
+import React, { useState, type FormEvent, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -20,11 +20,11 @@ function OriginalNovaCategoriaPage() {
   const [nome, setNome] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNome('');
-  };
+  }, []);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
 
@@ -36,7 +36,6 @@ function OriginalNovaCategoriaPage() {
     }
 
     try {
-      // Verificar se a categoria já existe (case-insensitive)
       const categoriasCollectionRef = collection(db, 'categorias');
       const q = query(categoriasCollectionRef, where('nomeLower', '==', nomeTrimmed.toLowerCase()));
       const querySnapshot = await getDocs(q);
@@ -51,10 +50,9 @@ function OriginalNovaCategoriaPage() {
         return;
       }
 
-      // Se não existe, adicionar nova categoria
       await addDoc(categoriasCollectionRef, {
         nome: nomeTrimmed,
-        nomeLower: nomeTrimmed.toLowerCase(), // Campo para busca case-insensitive
+        nomeLower: nomeTrimmed.toLowerCase(),
         dataCriacao: serverTimestamp(),
       });
 
@@ -77,7 +75,7 @@ function OriginalNovaCategoriaPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [nome, toast, router, resetForm]);
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Adicionado React
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -27,11 +27,12 @@ function OriginalCategoriasPage() {
   const { toast } = useToast();
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
+  const [isProcessingDelete, setIsProcessingDelete] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
     const categoriasCollectionRef = collection(db, 'categorias');
-    const q = query(categoriasCollectionRef, orderBy('nome', 'asc')); // Ordenar por nome
+    const q = query(categoriasCollectionRef, orderBy('nome', 'asc')); 
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const categoriasData: Categoria[] = [];
@@ -56,20 +57,18 @@ function OriginalCategoriasPage() {
     return format(timestamp.toDate(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
   };
   
-  const handleEdit = (id: string) => {
-    // Navegar para a página de edição
-    // router.push(`/dashboard/cadastros/categorias/${id}/editar`);
+  const handleEdit = useCallback((id: string) => {
     toast({ title: "Em breve", description: `Funcionalidade de editar categoria ${id} será implementada.`});
-  }
+  }, [toast]);
 
-  const handleOpenDeleteDialog = (categoria: Categoria) => {
+  const handleOpenDeleteDialog = useCallback((categoria: Categoria) => {
     setCategoriaToDelete(categoria);
     setIsConfirmDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!categoriaToDelete) return;
-    setIsLoading(true); 
+    setIsProcessingDelete(true); 
     try {
       await deleteDoc(doc(db, 'categorias', categoriaToDelete.id));
       toast({
@@ -87,9 +86,9 @@ function OriginalCategoriasPage() {
     } finally {
       setIsConfirmDeleteDialogOpen(false);
       setCategoriaToDelete(null);
-      setIsLoading(false);
+      setIsProcessingDelete(false);
     }
-  };
+  }, [categoriaToDelete, toast]);
 
 
   return (
@@ -144,7 +143,7 @@ function OriginalCategoriasPage() {
                         {formatDate(categoria.dataCriacao)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="mr-1" onClick={() => handleEdit(categoria.id)}>
+                        <Button variant="ghost" size="icon" className="mr-1" onClick={() => handleEdit(categoria.id)} disabled={isProcessingDelete}>
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Editar</span>
                         </Button>
@@ -153,6 +152,7 @@ function OriginalCategoriasPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => handleOpenDeleteDialog(categoria)}
+                          disabled={isProcessingDelete}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Excluir</span>
@@ -188,13 +188,13 @@ function OriginalCategoriasPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setCategoriaToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setCategoriaToDelete(null)} disabled={isProcessingDelete}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
-              disabled={isLoading}
+              disabled={isProcessingDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isProcessingDelete ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
