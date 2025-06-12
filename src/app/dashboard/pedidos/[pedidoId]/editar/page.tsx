@@ -3,13 +3,11 @@ import React, { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import EditarPedidoClient from "./EditarPedidoClient";
 
-interface EditarPedidoPageProps {
-  params: {
-    pedidoId: string;
-  };
-}
-
-export default function EditarPedidoPage({ params }: EditarPedidoPageProps) {
+export default function EditarPedidoPage({
+  params,
+}: {
+  params: { pedidoId: string };
+}) {
   return (
     <Suspense
       fallback={
