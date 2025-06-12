@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent } from 'react'; // Adicionado React
+import React, { useState, useEffect, type FormEvent } from 'react'; 
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
 import { doc, getDoc, updateDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
@@ -27,8 +27,8 @@ interface PedidoFormData {
 }
 
 function OriginalEditarPedidoPage() {
-  const { pedidoId: rawPedidoId } = useParams();
-  const pedidoId = rawPedidoId as string;
+  const routeParams = useParams();
+  const pedidoId = routeParams.pedidoId as string;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -72,7 +72,7 @@ function OriginalEditarPedidoPage() {
         } catch (error) {
           const firestoreError = error as FirebaseError;
           console.error("Erro ao buscar pedido para edição:", firestoreError);
-          setNotFound(true); // Consider not found if fetch fails critically
+          setNotFound(true); 
           toast({ title: "Erro ao carregar", description: "Não foi possível carregar os dados do pedido.", variant: "destructive" });
         } finally {
           setIsFetching(false);

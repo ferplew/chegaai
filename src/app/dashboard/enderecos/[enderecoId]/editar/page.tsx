@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent } from 'react'; // Adicionado React
+import React, { useState, useEffect, type FormEvent } from 'react'; 
 import Link from "next/link";
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,12 @@ interface EnderecoFormData {
   cep: string;
   complemento: string;
   referencia: string;
-  clienteNome?: string; // Adicionado para manter consistência se existir
+  clienteNome?: string; 
 }
 
 function OriginalEditarEnderecoPage() {
-  const { enderecoId: rawEnderecoId } = useParams();
-  const enderecoId = rawEnderecoId as string;
+  const routeParams = useParams();
+  const enderecoId = routeParams.enderecoId as string;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -102,9 +102,9 @@ function OriginalEditarEnderecoPage() {
     try {
       const enderecoDocRef = doc(db, 'enderecos', enderecoId);
       await updateDoc(enderecoDocRef, {
-        ...formData, // Salva todos os campos do estado formData
-        clienteNome: formData.clienteNome?.trim() || null, // Garante que o nome do cliente seja salvo como null se vazio
-        dataModificacao: serverTimestamp(), // Opcional: adicionar data de modificação
+        ...formData, 
+        clienteNome: formData.clienteNome?.trim() || null, 
+        dataModificacao: serverTimestamp(), 
       });
       toast({ title: "Endereço atualizado!", description: "As alterações foram salvas com sucesso no Firestore." });
       router.push('/dashboard/enderecos');
