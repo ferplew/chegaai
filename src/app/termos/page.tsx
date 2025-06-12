@@ -72,7 +72,7 @@ export default function TermosPage() {
                 <p>Reservamo-nos o direito, a nosso exclusivo critério, de modificar ou substituir estes Termos a qualquer momento. Se uma revisão for material, tentaremos fornecer um aviso de pelo menos 30 dias antes de quaisquer novos termos entrarem em vigor. O que constitui uma alteração material será determinado a nosso exclusivo critério.</p>
 
                 <h2 className="text-xl font-semibold text-foreground flex items-center gap-2"><FileText className="h-5 w-5 text-primary"/>7. Contato</h2>
-                <p>Se você tiver alguma dúvida sobre estes Termos, entre em contato conosco em <strong className="text-primary">contato@chegaai.com.br</strong> (exemplo).</p>
+                <p>Se você tiver alguma dúvida sobre estes Termos, entre em contato conosco em <strong className="text-primary">contato@chegaai.delivery</strong>.</p>
               </div>
               <p className="italic text-sm mt-6 border-t pt-4">
                 <strong>Aviso Legal:</strong> O conteúdo desta página de Termos e Condições é puramente ilustrativo e gerado para fins de prototipagem. Ele não constitui aconselhamento jurídico e não deve ser usado como tal. Recomendamos que você consulte um profissional jurídico para elaborar os Termos e Condições adequados para o seu serviço.

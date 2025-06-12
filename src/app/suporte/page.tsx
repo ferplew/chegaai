@@ -102,13 +102,13 @@ export default function SuportePage() {
                     Se você tiver dúvidas específicas, problemas técnicos ou sugestões, nossa equipe de suporte está pronta para ajudar.
                   </p>
                   <p>
-                    Envie um e-mail para: <strong className="text-primary">suporte@chegaai.com.br</strong> (exemplo)
+                    Envie um e-mail para: <strong className="text-primary">suporte@chegaai.delivery</strong>
                   </p>
                   <p>
                     Procuramos responder a todas as solicitações o mais rápido possível.
                   </p>
                   <Button className="w-full mt-2" asChild>
-                    <a href="mailto:suporte@chegaai.com.br">Enviar E-mail</a>
+                    <a href="mailto:suporte@chegaai.delivery">Enviar E-mail</a>
                   </Button>
                 </CardContent>
               </Card>

@@ -159,7 +159,7 @@ function OriginalNovoClientePage() {
                 <Input
                     id="email"
                     type="email"
-                    placeholder="email@exemplo.com"
+                    placeholder="cliente@chegaai.delivery"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, type FormEvent, useEffect } from 'react';
+import React, { useState, type FormEvent, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -45,8 +45,12 @@ function OriginalLoginPage() {
   useEffect(() => {
     // Determine initial action based on searchParamsFromHook once component has mounted/params are ready
     if (searchParamsFromHook) {
-      const actionFromParams = searchParamsFromHook.get('action') === 'register' ? 'register' : 'login';
-      setAction(actionFromParams);
+        const actionFromParams = searchParamsFromHook.get('action');
+        if (actionFromParams === 'register') {
+            setAction('register');
+        } else {
+            setAction('login');
+        }
     }
   }, [searchParamsFromHook]);
 
@@ -246,7 +250,7 @@ function OriginalLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="seuemail@exemplo.com"
+                placeholder="seuemail@chegaai.delivery"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
