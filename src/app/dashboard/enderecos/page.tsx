@@ -1,7 +1,7 @@
 
 "use client"; 
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,7 +26,7 @@ interface Endereco {
   pedidoId?: string;
 }
 
-export default function EnderecosPage() {
+function OriginalEnderecosPage() {
   const { toast } = useToast();
   const [enderecos, setEnderecos] = useState<Endereco[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -217,4 +217,6 @@ export default function EnderecosPage() {
     </div>
   );
 }
-    
+
+const EnderecosPage = React.memo(OriginalEnderecosPage);
+export default EnderecosPage;

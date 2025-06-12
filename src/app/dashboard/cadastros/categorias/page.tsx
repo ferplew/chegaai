@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -20,7 +20,7 @@ interface Categoria {
   dataCriacao: Timestamp;
 }
 
-export default function CategoriasPage() {
+function OriginalCategoriasPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -203,3 +203,6 @@ export default function CategoriasPage() {
     </div>
   );
 }
+
+const CategoriasPage = React.memo(OriginalCategoriasPage);
+export default CategoriasPage;

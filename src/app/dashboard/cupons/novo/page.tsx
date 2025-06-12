@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -19,7 +19,7 @@ import { ptBR } from "date-fns/locale";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
 
-export default function NovoCupomPage() {
+function OriginalNovoCupomPage() {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -241,4 +241,6 @@ export default function NovoCupomPage() {
     </div>
   );
 }
-    
+
+const NovoCupomPage = React.memo(OriginalNovoCupomPage);
+export default NovoCupomPage;

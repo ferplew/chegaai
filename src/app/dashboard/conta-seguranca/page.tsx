@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, type FormEvent } from 'react';
+import React, { useState, useEffect, type FormEvent } from 'react'; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ const initialDadosFinanceiros: DadosFinanceiros = {
   chavePix: '',
 };
 
-export default function ContaSegurancaPage() {
+function OriginalContaSegurancaPage() {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -349,4 +349,6 @@ export default function ContaSegurancaPage() {
     </div>
   );
 }
-    
+
+const ContaSegurancaPage = React.memo(OriginalContaSegurancaPage);
+export default ContaSegurancaPage;

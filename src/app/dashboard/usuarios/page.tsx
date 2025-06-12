@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -34,7 +34,7 @@ function getStatusBadgeVariant(status: string): "default" | "destructive" | "sec
 }
 
 
-export default function UsuariosPage() {
+function OriginalUsuariosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,3 +215,6 @@ export default function UsuariosPage() {
     </div>
   );
 }
+
+const UsuariosPage = React.memo(OriginalUsuariosPage);
+export default UsuariosPage;

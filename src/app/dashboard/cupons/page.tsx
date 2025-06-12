@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -36,7 +36,7 @@ function getStatusText(ativo: boolean): string {
   return ativo ? "Ativo" : "Inativo";
 }
 
-export default function CuponsPage() {
+function OriginalCuponsPage() {
   const [cupons, setCupons] = useState<Cupom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,3 +234,6 @@ export default function CuponsPage() {
     </div>
   );
 }
+
+const CuponsPage = React.memo(OriginalCuponsPage);
+export default CuponsPage;

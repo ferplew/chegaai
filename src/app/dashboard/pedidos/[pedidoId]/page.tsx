@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; // Adicionado React
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
 import { doc, getDoc, Timestamp, type FirebaseError } from 'firebase/firestore';
@@ -37,7 +37,7 @@ function getStatusBadgeClass(status: string): string {
   }
 }
 
-export default function PedidoDetalhesPage() {
+function OriginalPedidoDetalhesPage() {
   const { pedidoId: rawPedidoId } = useParams();
   const pedidoId = rawPedidoId as string;
   const router = useRouter();
@@ -216,4 +216,6 @@ export default function PedidoDetalhesPage() {
     </div>
   );
 }
-    
+
+const PedidoDetalhesPage = React.memo(OriginalPedidoDetalhesPage);
+export default PedidoDetalhesPage;

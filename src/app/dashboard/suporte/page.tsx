@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react'; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,7 @@ const faqItems = [
   },
 ];
 
-export default function SuportePage() {
+function OriginalSuportePage() {
   const { toast } = useToast();
   const [ticketAssunto, setTicketAssunto] = useState('');
   const [ticketDescricao, setTicketDescricao] = useState('');
@@ -56,8 +56,6 @@ export default function SuportePage() {
     }
 
     // Simulação de envio de ticket
-    console.log("Ticket Enviado (Simulação):", { assunto: ticketAssunto, descricao: ticketDescricao });
-    
     // TODO: Implementar lógica de salvamento no Firestore ou envio para sistema de help desk
     
     // Aguardar um pouco para simular processamento
@@ -161,3 +159,6 @@ export default function SuportePage() {
     </div>
   );
 }
+
+const SuportePage = React.memo(OriginalSuportePage);
+export default SuportePage;

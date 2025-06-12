@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent } from 'react'; // Adicionado React
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -23,7 +23,7 @@ interface TemaCustomData {
 
 const defaultPrimaryHSL = "129 100% 54.1%"; // Cor neon verde padrão
 
-export default function TemaPage() {
+function OriginalTemaPage() {
   const { theme, setTheme } = useTheme(); // For Light/Dark/System app theme
   const { toast } = useToast();
 
@@ -81,7 +81,8 @@ export default function TemaPage() {
       }
     };
     fetchData();
-  }, [toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]); // Removed temaDocRef from dependency array as it's stable
 
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>, type: 'logotipo' | 'banner') => {
@@ -153,8 +154,8 @@ export default function TemaPage() {
       applyCustomColor(dataToSave.corPrincipalHSL); // Apply new color immediately
       toast({ title: "Tema Salvo!", description: "Suas personalizações foram aplicadas." });
     } catch (error) {
-      const firestoreError = error as FirebaseError;
-      console.error("Erro ao salvar tema:", firestoreError);
+      // const firestoreError = error as FirebaseError; // FirebaseError might not be the only type here
+      console.error("Erro ao salvar tema:", error);
       toast({ title: "Erro ao Salvar Tema", variant: "destructive" });
     } finally {
       setIsSaving(false);
@@ -177,12 +178,19 @@ export default function TemaPage() {
         }
       }
     }
-    setCustomData(prev => ({ ...prev, [type]: null }));
+    const updatedCustomData = { ...customData, [type]: null };
+    setCustomData(updatedCustomData);
     if (type === 'logotipoUrl') setLogotipoPreview(null);
     if (type === 'bannerUrl') setBannerPreview(null);
-    // Auto-save this removal
-    await setDoc(temaDocRef, { ...customData, [type]: null, dataModificacao: serverTimestamp() }, { merge: true });
-    toast({title: "Imagem Removida", description: `A imagem (${type.replace('Url','')}) foi desvinculada.`});
+    
+    try {
+        await setDoc(temaDocRef, { ...updatedCustomData, dataModificacao: serverTimestamp() }, { merge: true });
+        toast({title: "Imagem Removida", description: `A imagem (${type.replace('Url','')}) foi desvinculada.`});
+    } catch (error) {
+        // const firestoreError = error as FirebaseError;
+        console.error("Erro ao salvar remoção da imagem no Firestore:", error);
+        toast({ title: "Erro ao Salvar Remoção", description: "Não foi possível atualizar a remoção da imagem no banco de dados.", variant: "destructive" });
+    }
   };
   
   const handleColorChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -302,4 +310,6 @@ export default function TemaPage() {
     </div>
   );
 }
-    
+
+const TemaPage = React.memo(OriginalTemaPage);
+export default TemaPage;

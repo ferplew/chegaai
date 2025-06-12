@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react'; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timest
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
-export default function NovoPedidoPage() {
+function OriginalNovoPedidoPage() {
   const [nomeCliente, setNomeCliente] = useState('');
   const [telefoneCliente, setTelefoneCliente] = useState('');
   const [itensPedido, setItensPedido] = useState('');
@@ -362,4 +362,6 @@ export default function NovoPedidoPage() {
     </div>
   );
 }
-    
+
+const NovoPedidoPage = React.memo(OriginalNovoPedidoPage);
+export default NovoPedidoPage;

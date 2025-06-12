@@ -1,7 +1,7 @@
 
 "use client";
 
-import * as React from "react";
+import React from "react"; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ import { CalendarDays, Download, Lock, AlertCircle, Eye, EyeOff } from "lucide-r
 
 const ADMIN_PASSWORD = "12345678"; // Senha de administrador temporária
 
-export default function GanhosPage() {
+function OriginalGanhosPage() {
   const [selectedDateRange, setSelectedDateRange] = React.useState<DateRange | undefined>({
     from: startOfDay(new Date()),
     to: endOfDay(new Date()),
@@ -214,3 +214,6 @@ export default function GanhosPage() {
     </div>
   );
 }
+
+const GanhosPage = React.memo(OriginalGanhosPage);
+export default GanhosPage;

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
@@ -34,7 +34,7 @@ interface Cliente {
   dataCadastro: Timestamp;
 }
 
-export default function ClientesPage() {
+function OriginalClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -229,3 +229,6 @@ export default function ClientesPage() {
     </div>
   );
 }
+
+const ClientesPage = React.memo(OriginalClientesPage);
+export default ClientesPage;

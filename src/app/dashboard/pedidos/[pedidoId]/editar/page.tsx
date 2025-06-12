@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, type FormEvent } from 'react';
+import React, { useState, useEffect, type FormEvent } from 'react'; // Adicionado React
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
 import { doc, getDoc, updateDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
@@ -26,7 +26,7 @@ interface PedidoFormData {
   status: 'Novo' | 'Em preparo' | 'Pronto' | 'Finalizado' | 'Cancelado';
 }
 
-export default function EditarPedidoPage() {
+function OriginalEditarPedidoPage() {
   const { pedidoId: rawPedidoId } = useParams();
   const pedidoId = rawPedidoId as string;
   const router = useRouter();
@@ -331,4 +331,6 @@ export default function EditarPedidoPage() {
     </div>
   );
 }
-    
+
+const EditarPedidoPage = React.memo(OriginalEditarPedidoPage);
+export default EditarPedidoPage;

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ const QRCodeCanvas = dynamic(() => import('qrcode.react').then(mod => mod.QRCode
 });
 
 
-export default function CardapioVirtualPage() {
+function OriginalCardapioVirtualPage() {
   const { toast } = useToast();
   const [restaurantSlug, setRestaurantSlug] = useState("meu-restaurante-exemplo");
   const [publicLink, setPublicLink] = useState("");
@@ -209,3 +209,6 @@ export default function CardapioVirtualPage() {
     </div>
   );
 }
+
+const CardapioVirtualPage = React.memo(OriginalCardapioVirtualPage);
+export default CardapioVirtualPage;

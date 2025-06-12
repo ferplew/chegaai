@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react'; // Adicionado React
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
-export default function NovoEnderecoPage() {
+function OriginalNovoEnderecoPage() {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -148,4 +148,6 @@ export default function NovoEnderecoPage() {
     </div>
   );
 }
-    
+
+const NovoEnderecoPage = React.memo(OriginalNovoEnderecoPage);
+export default NovoEnderecoPage;

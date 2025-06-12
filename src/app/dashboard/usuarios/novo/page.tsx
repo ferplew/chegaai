@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react'; // Adicionado React
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
 import { db } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
 
-export default function NovoFuncionarioPage() {
+function OriginalNovoFuncionarioPage() {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -160,3 +160,6 @@ export default function NovoFuncionarioPage() {
     </div>
   );
 }
+
+const NovoFuncionarioPage = React.memo(OriginalNovoFuncionarioPage);
+export default NovoFuncionarioPage;

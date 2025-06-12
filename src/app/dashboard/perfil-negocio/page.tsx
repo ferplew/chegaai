@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, type FormEvent } from 'react';
+import React, { useState, useEffect, type FormEvent } from 'react'; // Adicionado React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +66,7 @@ const initialHorarios: HorariosFuncionamento = {
 
 const initialEndereco: Endereco = { rua: '', numero: '', bairro: '', cidade: '', estado: '', cep: '' };
 
-export default function PerfilNegocioPage() {
+function OriginalPerfilNegocioPage() {
   const { toast } = useToast();
   const [formData, setFormData] = useState<PerfilNegocioData>({
     nomeRestaurante: '',
@@ -106,7 +106,7 @@ export default function PerfilNegocioPage() {
             tempoMedioEntrega: data.tempoMedioEntrega !== undefined ? data.tempoMedioEntrega : '',
           }));
         } else {
-          console.log("Nenhum perfil de negócio encontrado, usando valores iniciais.");
+          // Nenhum perfil de negócio encontrado, usando valores iniciais.
         }
       } catch (error) {
         const firestoreError = error as FirebaseError;
@@ -409,4 +409,6 @@ export default function PerfilNegocioPage() {
     </form>
   );
 }
-    
+
+const PerfilNegocioPage = React.memo(OriginalPerfilNegocioPage);
+export default PerfilNegocioPage;
