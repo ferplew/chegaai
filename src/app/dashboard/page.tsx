@@ -13,26 +13,36 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirestoreError, Timestamp } from 'firebase/firestore';
 
-// Dynamic imports for Recharts components
-const DynamicBarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2">Carregando gráfico...</p></div>,
-});
+// Helper para importação dinâmica e remoção de defaultProps problemáticos
+const dynamicRechartsComponent = <P extends object>(
+  componentName: keyof typeof import('recharts'),
+  loadingComponent?: React.ReactNode
+) => {
+  return dynamic(
+    () =>
+      import('recharts').then((mod) => {
+        const Component = mod[componentName] as any;
+        if (Component && Component.defaultProps) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { defaultProps, ...ComponentWithoutDefaultProps } = Component;
+          return ComponentWithoutDefaultProps as React.ComponentType<P>;
+        }
+        return Component as React.ComponentType<P>;
+      }),
+    {
+      ssr: false,
+      loading: () => loadingComponent || <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2">Carregando...</p></div>,
+    }
+  );
+};
 
-const DynamicBar = dynamic(
-  () => import('recharts').then(mod => {
-    const Component = mod.Bar;
-    // Remove defaultProps para evitar problemas de tipo, mas mantém as props originais
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { defaultProps, ...ComponentWithoutDefaultProps } = Component as any;
-    return ComponentWithoutDefaultProps as React.ComponentType<React.ComponentProps<typeof mod.Bar>>;
-  }),
-  { ssr: false }
-);
+const defaultChartLoading = <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2">Carregando gráfico...</p></div>;
 
-const DynamicCartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const DynamicXAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const DynamicYAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+const DynamicBarChart = dynamicRechartsComponent<React.ComponentProps<typeof import('recharts').BarChart>>('BarChart', defaultChartLoading);
+const DynamicBar = dynamicRechartsComponent<React.ComponentProps<typeof import('recharts').Bar>>('Bar');
+const DynamicCartesianGrid = dynamicRechartsComponent<React.ComponentProps<typeof import('recharts').CartesianGrid>>('CartesianGrid');
+const DynamicXAxis = dynamicRechartsComponent<React.ComponentProps<typeof import('recharts').XAxis>>('XAxis');
+const DynamicYAxis = dynamicRechartsComponent<React.ComponentProps<typeof import('recharts').YAxis>>('YAxis');
 
 
 // Example data for the chart structure, actual data should be dynamic
@@ -51,7 +61,7 @@ interface RecentOrder {
   nomeCliente?: string;
   status: string;
   valorTotal?: number;
-  dataCriacao?: Timestamp; 
+  dataCriacao?: Timestamp;
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -68,7 +78,7 @@ function getStatusBadgeClass(status: string): string {
 function OriginalDashboardPage() {
   const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
   const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]); 
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(true);
 
 
@@ -81,10 +91,10 @@ function OriginalDashboardPage() {
       setIsLoadingPedidosEmAndamento(false);
     }, (error: FirestoreError) => {
       console.error("Erro ao buscar pedidos em andamento:", error);
-      setPedidosEmAndamentoCount(0); 
+      setPedidosEmAndamentoCount(0);
       setIsLoadingPedidosEmAndamento(false);
     });
-    
+
     // TODO: Implement fetching of recent orders (e.g., last 5 orders from Firestore)
     // For now, setting it to empty and loaded after a small delay
     setTimeout(() => {
@@ -93,7 +103,7 @@ function OriginalDashboardPage() {
     }, 1000);
 
 
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
 
@@ -148,7 +158,7 @@ function OriginalDashboardPage() {
             {isLoadingPedidosEmAndamento ? (
                 <Loader2 className="h-5 w-5 text-primary animate-spin" />
             ) : (
-                <ShoppingCart className="h-5 w-5 text-primary" /> 
+                <ShoppingCart className="h-5 w-5 text-primary" />
             )}
           </CardHeader>
           <CardContent>
@@ -180,7 +190,7 @@ function OriginalDashboardPage() {
             </ChartContainer>
           </CardContent>
         </Card>
-        
+
         <Card className="col-span-1 md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
@@ -259,6 +269,3 @@ function OriginalDashboardPage() {
 
 const DashboardPage = React.memo(OriginalDashboardPage);
 export default DashboardPage;
-    
-
-    
