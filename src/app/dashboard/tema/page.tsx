@@ -1,7 +1,7 @@
 
 import dynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
-import { Loader2 from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const TemaCustomizationForm = dynamic(() => import('@/components/dashboard/forms/TemaCustomizationForm'), {
   ssr: false,
