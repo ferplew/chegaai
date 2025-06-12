@@ -1,17 +1,29 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react'; // Adicionado React aqui
+import React, { useEffect, useState } from 'react';
 import Link from "next/link";
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle, Info } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+// import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"; // Original imports
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirebaseError, Timestamp } from 'firebase/firestore';
+
+// Dynamic imports for Recharts components
+const DynamicBarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2">Carregando gráfico...</p></div>,
+});
+const DynamicBar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
+const DynamicCartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
+const DynamicXAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
+const DynamicYAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+
 
 // Example data for the chart structure, actual data should be dynamic
 const dailyOrdersDataExample = [
@@ -148,13 +160,13 @@ function OriginalDashboardPage() {
           </CardHeader>
           <CardContent className="h-[300px] w-full p-2">
             <ChartContainer config={chartConfig}>
-              <BarChart data={dailyOrdersDataExample} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
-                <XAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <DynamicBarChart data={dailyOrdersDataExample} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <DynamicCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
+                <DynamicXAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <DynamicYAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                <Bar dataKey="pedidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
+                <DynamicBar dataKey="pedidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </DynamicBarChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -237,4 +249,6 @@ function OriginalDashboardPage() {
 
 const DashboardPage = React.memo(OriginalDashboardPage);
 export default DashboardPage;
+    
+
     
