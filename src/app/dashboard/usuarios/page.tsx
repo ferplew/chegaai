@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +57,7 @@ function OriginalUsuariosPage() {
       setFuncionarios(funcionariosData);
       setIsLoading(false);
       setError(null);
-    }, (err: FirebaseError) => {
+    }, (err: FirestoreError) => {
       console.error("Erro ao buscar funcionários: ", err);
       setError("Não foi possível carregar os funcionários. Tente novamente mais tarde.");
       toast({ title: "Erro ao carregar funcionários", description: err.message, variant: "destructive" });
@@ -87,7 +87,7 @@ function OriginalUsuariosPage() {
         description: `O funcionário "${funcionarioToDelete.nome}" foi removido da lista.`,
       });
     } catch (err) {
-      const firestoreError = err as FirebaseError;
+      const firestoreError = err as FirestoreError;
       console.error("Erro ao excluir funcionário: ", firestoreError);
       toast({
         title: "Erro ao excluir",

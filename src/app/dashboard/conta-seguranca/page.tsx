@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { KeyRound, Landmark, FileBadge2, History, Bell, AlertTriangle, UserX, Loader2, Save, Eye, EyeOff, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { db, auth } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, type FirestoreError } from 'firebase/firestore';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, type User, type AuthError } from 'firebase/auth';
 import { isValidCPF, isValidCNPJ, cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -75,7 +75,7 @@ function OriginalContaSegurancaPage() {
           setFinanceiroData(prev => ({ ...prev, ...docSnap.data() as DadosFinanceiros}));
         }
       } catch (error) {
-        const firestoreError = error as FirebaseError;
+        const firestoreError = error as FirestoreError;
         console.error("Erro ao buscar dados financeiros:", firestoreError);
         toast({ title: "Erro ao carregar dados", description: "Não foi possível buscar os dados financeiros.", variant: "destructive" });
       } finally {
@@ -186,7 +186,7 @@ function OriginalContaSegurancaPage() {
       }, { merge: true });
       toast({ title: "Dados Salvos!", description: "Suas informações de recebimento foram atualizadas." });
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar dados financeiros:", firestoreError);
       toast({ title: "Erro ao Salvar", description: "Não foi possível salvar os dados financeiros.", variant: "destructive" });
     } finally {

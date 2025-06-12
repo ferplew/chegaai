@@ -17,7 +17,7 @@ import { suggestItemDetails, type SuggestItemDetailsOutput } from '@/ai/flows/su
 import { generateItemImage, type GenerateItemImageOutput } from '@/ai/flows/generate-item-image-flow';
 
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, type FirestoreError } from 'firebase/firestore';
 import { ref as storageRef, uploadString, uploadBytesResumable, getDownloadURL, type StorageError } from 'firebase/storage';
 
 interface Adicional {
@@ -268,7 +268,7 @@ function OriginalNovoItemPage() {
       router.push('/dashboard/produtos'); 
 
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar item: ", firestoreError);
       toast({
         title: "Erro ao Salvar",

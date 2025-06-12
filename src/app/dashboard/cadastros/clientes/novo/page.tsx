@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, UserPlus, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, type FirestoreError } from 'firebase/firestore';
 
 function OriginalNovoClientePage() {
   const router = useRouter();
@@ -100,7 +100,7 @@ function OriginalNovoClientePage() {
       router.push('/dashboard/cadastros/clientes'); 
 
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar cliente: ", firestoreError);
       toast({
         title: "Erro ao salvar",

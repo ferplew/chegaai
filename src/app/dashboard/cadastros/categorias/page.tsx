@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +41,7 @@ function OriginalCategoriasPage() {
       setCategorias(categoriasData);
       setIsLoading(false);
       setError(null);
-    }, (err: FirebaseError) => {
+    }, (err: FirestoreError) => {
       console.error("Erro ao buscar categorias: ", err);
       setError("Não foi possível carregar as categorias. Tente novamente mais tarde.");
       toast({ title: "Erro ao carregar categorias", description: err.message, variant: "destructive" });
@@ -77,7 +77,7 @@ function OriginalCategoriasPage() {
         description: `A categoria "${categoriaToDelete.nome}" foi removida com sucesso.`,
       });
     } catch (err) {
-      const firestoreError = err as FirebaseError;
+      const firestoreError = err as FirestoreError;
       console.error("Erro ao excluir categoria: ", firestoreError);
       toast({
         title: "Erro ao excluir",

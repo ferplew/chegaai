@@ -17,7 +17,7 @@ import type { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, Timestamp, type FirebaseError } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, type FirestoreError } from 'firebase/firestore';
 
 function OriginalNovoCupomPage() {
   const router = useRouter();
@@ -91,7 +91,7 @@ function OriginalNovoCupomPage() {
       router.push('/dashboard/cupons'); 
 
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar cupom: ", firestoreError);
       toast({
         title: "Erro ao salvar",

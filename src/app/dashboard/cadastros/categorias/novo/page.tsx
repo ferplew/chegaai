@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, type FirebaseError } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, type FirestoreError } from 'firebase/firestore';
 
 function OriginalNovaCategoriaPage() {
   const router = useRouter();
@@ -67,7 +67,7 @@ function OriginalNovaCategoriaPage() {
       router.push('/dashboard/cadastros/categorias'); 
 
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar categoria: ", firestoreError);
       toast({
         title: "Erro ao salvar",

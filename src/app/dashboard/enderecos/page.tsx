@@ -9,7 +9,7 @@ import { PlusCircle, Edit, Trash2, Loader2, MapPin, AlertCircle } from "lucide-r
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { db } from '@/lib/firebase/config';
-import { collection, onSnapshot, query, orderBy, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, deleteDoc, type FirestoreError } from 'firebase/firestore';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
@@ -51,7 +51,7 @@ function OriginalEnderecosPage() {
       setEnderecos(enderecosData);
       setIsLoading(false);
       setError(null);
-    }, (err: FirebaseError) => {
+    }, (err: FirestoreError) => {
       console.error("Erro ao buscar endereços: ", err);
       setError("Não foi possível carregar os endereços. Tente novamente mais tarde.");
       toast({ title: "Erro ao carregar endereços", description: err.message, variant: "destructive" });
@@ -77,7 +77,7 @@ function OriginalEnderecosPage() {
         description: `O endereço de ${enderecoToDelete.clienteNome || enderecoToDelete.rua} foi removido.`,
       });
     } catch (err) {
-      const firestoreError = err as FirebaseError;
+      const firestoreError = err as FirestoreError;
       console.error("Erro ao excluir endereço: ", firestoreError);
       toast({
         title: "Erro ao excluir",

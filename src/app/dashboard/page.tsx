@@ -12,7 +12,7 @@ import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, P
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 // import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"; // Original imports
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirebaseError, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirestoreError, Timestamp } from 'firebase/firestore';
 
 // Dynamic imports for Recharts components
 const DynamicBarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), {
@@ -69,7 +69,7 @@ function OriginalDashboardPage() {
     const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
       setPedidosEmAndamentoCount(querySnapshot.size);
       setIsLoadingPedidosEmAndamento(false);
-    }, (error: FirebaseError) => {
+    }, (error: FirestoreError) => {
       console.error("Erro ao buscar pedidos em andamento:", error);
       setPedidosEmAndamentoCount(0); 
       setIsLoadingPedidosEmAndamento(false);

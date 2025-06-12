@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sun, Moon, Laptop, ImagePlus, PaletteIcon, Loader2, Save, UploadCloud, Trash2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db, storage } from '@/lib/firebase/config';
-import { doc, getDoc, setDoc, serverTimestamp, type FirebaseError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, type FirestoreError } from 'firebase/firestore';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, type StorageError } from 'firebase/storage';
 import Image from 'next/image';
 
@@ -72,7 +72,7 @@ function OriginalTemaPage() {
           applyCustomColor(defaultPrimaryHSL); // Apply default if no custom theme saved
         }
       } catch (error) {
-        const firestoreError = error as FirebaseError;
+        const firestoreError = error as FirestoreError;
         console.error("Erro ao buscar tema customizado:", firestoreError);
         toast({ title: "Erro ao carregar tema", variant: "destructive" });
         applyCustomColor(defaultPrimaryHSL); // Apply default on error
@@ -154,7 +154,7 @@ function OriginalTemaPage() {
       applyCustomColor(dataToSave.corPrincipalHSL); // Apply new color immediately
       toast({ title: "Tema Salvo!", description: "Suas personalizações foram aplicadas." });
     } catch (error) {
-      // const firestoreError = error as FirebaseError; // FirebaseError might not be the only type here
+      // const firestoreError = error as FirestoreError; // FirebaseError might not be the only type here
       console.error("Erro ao salvar tema:", error);
       toast({ title: "Erro ao Salvar Tema", variant: "destructive" });
     } finally {
@@ -187,7 +187,7 @@ function OriginalTemaPage() {
         await setDoc(temaDocRef, { ...updatedCustomData, dataModificacao: serverTimestamp() }, { merge: true });
         toast({title: "Imagem Removida", description: `A imagem (${type.replace('Url','')}) foi desvinculada.`});
     } catch (error) {
-        // const firestoreError = error as FirebaseError;
+        // const firestoreError = error as FirestoreError;
         console.error("Erro ao salvar remoção da imagem no Firestore:", error);
         toast({ title: "Erro ao Salvar Remoção", description: "Não foi possível atualizar a remoção da imagem no banco de dados.", variant: "destructive" });
     }

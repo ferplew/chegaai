@@ -4,7 +4,7 @@
 import React, { useEffect, useState, use } from 'react'; 
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
-import { doc, getDoc, Timestamp, type FirebaseError } from 'firebase/firestore';
+import { doc, getDoc, Timestamp, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ function OriginalPedidoDetalhesPage() {
             setError("Pedido não encontrado.");
           }
         } catch (err) {
-          const firestoreError = err as FirebaseError;
+          const firestoreError = err as FirestoreError;
           console.error("Erro ao buscar pedido:", firestoreError);
           setError("Falha ao carregar os detalhes do pedido.");
         } finally {

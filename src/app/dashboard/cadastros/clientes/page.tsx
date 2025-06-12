@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react'; // Adicionado React
 import Link from 'next/link';
-import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirebaseError } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, Timestamp, doc, deleteDoc, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,7 +56,7 @@ function OriginalClientesPage() {
       setClientes(clientesData);
       setIsLoading(false);
       setError(null);
-    }, (err: FirebaseError) => {
+    }, (err: FirestoreError) => {
       console.error("Erro ao buscar clientes: ", err);
       setError("Não foi possível carregar os clientes. Tente novamente mais tarde.");
       toast({ title: "Erro ao carregar clientes", description: err.message, variant: "destructive" });
@@ -90,7 +90,7 @@ function OriginalClientesPage() {
         description: `O cliente "${clienteToDelete.nome}" foi removido com sucesso.`,
       });
     } catch (err) {
-      const firestoreError = err as FirebaseError;
+      const firestoreError = err as FirestoreError;
       console.error("Erro ao excluir cliente: ", firestoreError);
       toast({
         title: "Erro ao excluir",

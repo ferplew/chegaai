@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link";
 import { ArrowLeft, Loader2, DollarSign, MapPin } from "lucide-react";
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timestamp, type FirebaseError } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, type Timestamp, type FirestoreError } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
@@ -159,7 +159,7 @@ function OriginalNovoPedidoPage() {
             variant: "default", 
           });
         } catch (addressError) {
-          const firestoreAddressError = addressError as FirebaseError;
+          const firestoreAddressError = addressError as FirestoreError;
           console.error("Erro ao salvar endereço separadamente: ", firestoreAddressError);
           toast({
             title: "Erro ao salvar endereço do pedido",
@@ -173,7 +173,7 @@ function OriginalNovoPedidoPage() {
       router.push('/dashboard/pedidos'); 
 
     } catch (error) {
-      const firestoreError = error as FirebaseError;
+      const firestoreError = error as FirestoreError;
       console.error("Erro ao salvar pedido: ", firestoreError);
       toast({
         title: "Erro ao salvar pedido",
