@@ -1,4 +1,6 @@
 
+"use client"; // Adicionado para permitir ssr: false
+
 import dynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +13,7 @@ const SuporteTicketForm = dynamic(() => import('@/components/dashboard/forms/Sup
     <Card className="lg:col-span-1">
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Loader2 className="h-5 w-5 text-primary animate-spin"/> Carregando Formulário...</CardTitle>
-        <CardDescription>Aguarde um momento.</CardHeader>
+        <CardDescription>Aguarde um momento.</CardDescription>
       </CardHeader>
       <CardContent className="h-48 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -19,8 +21,6 @@ const SuporteTicketForm = dynamic(() => import('@/components/dashboard/forms/Sup
     </Card>
   ),
 });
-
-export const revalidate = 86400; // Revalidate once a day for FAQ content
 
 const faqItems = [
   {
@@ -91,7 +91,7 @@ function OriginalSuportePage() {
             <Card className="lg:col-span-1">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Loader2 className="h-5 w-5 text-primary animate-spin"/> Carregando Formulário...</CardTitle>
-                    <CardDescription>Aguarde um momento.</CardHeader>
+                    <CardDescription>Aguarde um momento.</CardDescription>
                 </CardHeader>
                 <CardContent className="h-48 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
