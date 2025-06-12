@@ -1,10 +1,14 @@
 
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react'; // Import React for React.memo
 import { DashboardHeader } from '@/components/dashboard/Header';
 import { DashboardSidebar } from '@/components/dashboard/Sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+function OriginalDashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-muted/40">
@@ -20,3 +24,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+
+const DashboardLayout = React.memo(OriginalDashboardLayout);
+export default DashboardLayout;
