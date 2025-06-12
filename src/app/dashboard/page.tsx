@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle, Info } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-// import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"; // Original imports
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirestoreError, Timestamp } from 'firebase/firestore';
 
@@ -19,7 +18,18 @@ const DynamicBarChart = dynamic(() => import('recharts').then(mod => mod.BarChar
   ssr: false,
   loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="ml-2">Carregando gráfico...</p></div>,
 });
-const DynamicBar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
+
+const DynamicBar = dynamic(
+  () => import('recharts').then(mod => {
+    const Component = mod.Bar;
+    // Remove defaultProps para evitar problemas de tipo, mas mantém as props originais
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { defaultProps, ...ComponentWithoutDefaultProps } = Component as any;
+    return ComponentWithoutDefaultProps as React.ComponentType<React.ComponentProps<typeof mod.Bar>>;
+  }),
+  { ssr: false }
+);
+
 const DynamicCartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
 const DynamicXAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
 const DynamicYAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
