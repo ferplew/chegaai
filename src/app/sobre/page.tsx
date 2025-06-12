@@ -1,7 +1,5 @@
 
-'use client';
-
-import React from 'react'; // Adicionado React
+import React from 'react'; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

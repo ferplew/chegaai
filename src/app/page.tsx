@@ -1,18 +1,15 @@
 
-"use client"; // Necessário para useState e useEffect
-
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react'; // Adicionado React
+import React from 'react'; 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 import { AnimatedPanelIcon as OriginalAnimatedPanelIcon } from '@/components/icons/AnimatedPanelIcon';
 import { Footer as OriginalFooter } from '@/components/layout/Footer';
+import { LandingHeader } from '@/components/layout/LandingHeader'; 
 import {
   Package, BarChart3, History, MonitorSmartphone, Users, Lock, SunMoon,
   Sparkles, Cloud, RefreshCw, BadgePercent, MinusCircle, LayoutGrid, Calculator, TrendingUp, Clock, UserPlus, PlusCircle, LayoutDashboard, Settings, LogIn
 } from 'lucide-react';
-import { cn } from "@/lib/utils";
 
 const AnimatedPanelIcon = React.memo(OriginalAnimatedPanelIcon);
 const Footer = React.memo(OriginalFooter);
@@ -50,37 +47,9 @@ const steps = [
 ];
 
 export default function LandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Call on mount to check initial scroll position
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
-        isScrolled ? "py-3 bg-background/95 shadow-lg backdrop-blur-sm" : "py-6 bg-background/80 backdrop-blur-md"
-      )}>
-        <div className="container mx-auto px-4 flex justify-start items-center"> {/* Changed to justify-start */}
-          <Link href="/" aria-label="Página Inicial Chega Aí">
-            <ChegaAiLogo className="h-10 text-primary" />
-          </Link>
-        </div>
-      </header>
+      <LandingHeader /> {/* Header agora é um componente separado */}
 
       <main className="flex-grow">
         {/* Hero Section */}
@@ -235,5 +204,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
