@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, type FormEvent } from 'react'; 
+import React, { useState, useEffect, type FormEvent, use } from 'react'; 
 import Link from "next/link";
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,9 @@ interface EnderecoFormData {
 }
 
 function OriginalEditarEnderecoPage() {
-  const routeParams = useParams();
-  const enderecoId = routeParams.enderecoId as string;
+  const params = useParams();
+  const unwrappedParams = use(params); // Unwrap params
+  const enderecoId = unwrappedParams.enderecoId as string;
   const router = useRouter();
   const { toast } = useToast();
 

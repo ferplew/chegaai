@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState, use } from 'react'; 
 import { useParams, useRouter } from 'next/navigation';
 import Link from "next/link";
 import { doc, getDoc, Timestamp, type FirebaseError } from 'firebase/firestore';
@@ -38,8 +38,9 @@ function getStatusBadgeClass(status: string): string {
 }
 
 function OriginalPedidoDetalhesPage() {
-  const routeParams = useParams();
-  const pedidoId = routeParams.pedidoId as string;
+  const params = useParams();
+  const unwrappedParams = use(params); // Unwrap params
+  const pedidoId = unwrappedParams.pedidoId as string;
   const router = useRouter();
 
   const [pedido, setPedido] = useState<Pedido | null>(null);
