@@ -45,26 +45,26 @@ import { ChegaAiLogo } from '@/components/icons/ChegaAiLogo';
 
 
 const mainNavItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/dashboard/pedidos', label: 'Pedidos', icon: ClipboardList },
-  { href: '/dashboard/cupons', label: 'Cupons', icon: TicketPercent },
-  { href: '/dashboard/enderecos', label: 'Endereços', icon: MapPin },
-  { href: '/dashboard/cardapio-virtual', label: 'Cardápio Virtual', icon: QrCode },
-  { href: '/dashboard/ganhos', label: 'Ganhos', icon: LineChart },
+  { href: '/dashboard', label: 'Dashboard', icon: Home, prefetch: true },
+  { href: '/dashboard/pedidos', label: 'Pedidos', icon: ClipboardList, prefetch: true },
+  { href: '/dashboard/cupons', label: 'Cupons', icon: TicketPercent, prefetch: false },
+  { href: '/dashboard/enderecos', label: 'Endereços', icon: MapPin, prefetch: false },
+  { href: '/dashboard/cardapio-virtual', label: 'Cardápio Virtual', icon: QrCode, prefetch: false },
+  { href: '/dashboard/ganhos', label: 'Ganhos', icon: LineChart, prefetch: false },
 ];
 
 const cadastrosNavItems = [
-  { href: '/dashboard/produtos', label: 'Itens', icon: Package }, 
-  { href: '/dashboard/cadastros/categorias', label: 'Categorias', icon: LayoutGrid },
-  { href: '/dashboard/cadastros/clientes', label: 'Clientes', icon: Users2 },
-  { href: '/dashboard/usuarios', label: 'Funcionários', icon: Briefcase }, 
+  { href: '/dashboard/produtos', label: 'Itens', icon: Package, prefetch: false }, 
+  { href: '/dashboard/cadastros/categorias', label: 'Categorias', icon: LayoutGrid, prefetch: false },
+  { href: '/dashboard/cadastros/clientes', label: 'Clientes', icon: Users2, prefetch: false },
+  { href: '/dashboard/usuarios', label: 'Funcionários', icon: Briefcase, prefetch: false }, 
 ];
 
 const settingsNavItems = [
-  { href: '/dashboard/perfil-negocio', label: 'Perfil do Negócio', icon: Store },
-  { href: '/dashboard/conta-seguranca', label: 'Conta e Segurança', icon: ShieldCheck },
-  { href: '/dashboard/tema', label: 'Tema', icon: Palette },
-  { href: '/dashboard/suporte', label: 'Suporte', icon: LifeBuoy },
+  { href: '/dashboard/perfil-negocio', label: 'Perfil do Negócio', icon: Store, prefetch: false },
+  { href: '/dashboard/conta-seguranca', label: 'Conta e Segurança', icon: ShieldCheck, prefetch: false },
+  { href: '/dashboard/tema', label: 'Tema', icon: Palette, prefetch: false },
+  { href: '/dashboard/suporte', label: 'Suporte', icon: LifeBuoy, prefetch: false },
 ];
 
 
@@ -97,7 +97,7 @@ function OriginalDashboardSidebarComponent() {
     }
   };
 
-  const renderNavItems = (items: typeof mainNavItems | typeof cadastrosNavItems | typeof settingsNavItems) => {
+  const renderNavItems = (items: Array<{ href: string, label: string, icon: React.ElementType, prefetch: boolean }>) => {
     return items.map((item) => (
       <SidebarMenuItem key={item.label}>
         <SidebarMenuButton
@@ -108,7 +108,7 @@ function OriginalDashboardSidebarComponent() {
           aria-label={item.label}
           onClick={handleNavItemClick} 
         >
-          <Link href={item.href} prefetch={false}>
+          <Link href={item.href} prefetch={item.prefetch}>
             <item.icon className="h-5 w-5" />
             <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
           </Link>
@@ -121,7 +121,7 @@ function OriginalDashboardSidebarComponent() {
     <>
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between"> 
-          <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2" prefetch={false}>
+          <Link href="/dashboard" className="ml-2 group-data-[state=collapsed]:hidden flex items-center gap-2" prefetch={true}>
              <ChegaAiLogo className="h-8 text-primary" />
           </Link>
           {!isMobile && ( 

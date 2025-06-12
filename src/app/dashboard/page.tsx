@@ -1,17 +1,53 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react'; // Adicionado Suspense
 import Link from "next/link";
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table"; // Mantido para skeleton
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, DollarSign, Clock, Loader2, ArrowUpRight, ExternalLink, PlusCircle, Info } from "lucide-react";
+import { ShoppingCart, DollarSign, Clock, Loader2, PlusCircle, Info } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirestoreError, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, type QuerySnapshot, type DocumentData, type FirestoreError } from 'firebase/firestore';
+
+const DynamicRecentOrdersTable = dynamic(() => import('@/components/dashboard/RecentOrdersTable'), {
+  ssr: false,
+  loading: () => (
+    <Card className="col-span-1 md:col-span-2 lg:col-span-1">
+      <CardHeader className="flex flex-row items-center">
+        <div className="grid gap-2">
+          <CardTitle>Últimos Pedidos</CardTitle>
+          <CardDescription>Acompanhe os pedidos mais recentes.</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">Hora</TableHead>
+              <TableHead className="text-right sr-only">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={6} className="h-32 text-center">
+                <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
+                <p className="mt-2 text-muted-foreground">Carregando últimos pedidos...</p>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  ),
+});
+
 
 // Helper para importação dinâmica e remoção de defaultProps problemáticos
 const dynamicRechartsComponent = <P extends object>(
@@ -56,31 +92,9 @@ const chartConfig = {
   pedidos: { label: "Pedidos", color: "hsl(var(--primary))" },
 };
 
-interface RecentOrder {
-  id: string;
-  nomeCliente?: string;
-  status: string;
-  valorTotal?: number;
-  dataCriacao?: Timestamp;
-}
-
-function getStatusBadgeClass(status: string): string {
-  switch (status.toLowerCase()) {
-    case "novo": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-    case "em preparo": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-    case "pronto": return "bg-primary/20 text-primary border-primary/30";
-    case "finalizado": return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
-    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-  }
-}
-
-
 function OriginalDashboardPage() {
   const [pedidosEmAndamentoCount, setPedidosEmAndamentoCount] = useState<number | null>(null);
   const [isLoadingPedidosEmAndamento, setIsLoadingPedidosEmAndamento] = useState(true);
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [isLoadingRecentOrders, setIsLoadingRecentOrders] = useState(true);
-
 
   useEffect(() => {
     const pedidosCollectionRef = collection(db, 'pedidos');
@@ -94,14 +108,6 @@ function OriginalDashboardPage() {
       setPedidosEmAndamentoCount(0);
       setIsLoadingPedidosEmAndamento(false);
     });
-
-    // TODO: Implement fetching of recent orders (e.g., last 5 orders from Firestore)
-    // For now, setting it to empty and loaded after a small delay
-    setTimeout(() => {
-        setRecentOrders([]); // Simulating no recent orders found
-        setIsLoadingRecentOrders(false);
-    }, 1000);
-
 
     return () => unsubscribe();
   }, []);
@@ -179,89 +185,33 @@ function OriginalDashboardPage() {
             <CardDescription>Volume de pedidos ao longo do dia (dados de exemplo).</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] w-full p-2">
-            <ChartContainer config={chartConfig}>
-              <DynamicBarChart data={dailyOrdersDataExample} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <DynamicCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
-                <DynamicXAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <DynamicYAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                <DynamicBar dataKey="pedidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </DynamicBarChart>
-            </ChartContainer>
+            <Suspense fallback={defaultChartLoading}>
+              <ChartContainer config={chartConfig}>
+                <DynamicBarChart data={dailyOrdersDataExample} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                  <DynamicCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
+                  <DynamicXAxis dataKey="hour" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <DynamicYAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                  <DynamicBar dataKey="pedidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </DynamicBarChart>
+              </ChartContainer>
+            </Suspense>
           </CardContent>
         </Card>
+        
+        <Suspense fallback={ // Suspense para a tabela de pedidos recentes
+          <Card className="col-span-1 md:col-span-2 lg:col-span-1">
+            <CardHeader>
+                <CardTitle>Carregando Pedidos...</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </CardContent>
+          </Card>
+        }>
+          <DynamicRecentOrdersTable />
+        </Suspense>
 
-        <Card className="col-span-1 md:col-span-2 lg:col-span-1">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>Últimos Pedidos</CardTitle>
-              <CardDescription>
-                Acompanhe os pedidos mais recentes.
-              </CardDescription>
-            </div>
-            <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="/dashboard/pedidos">
-                Ver Todos
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead className="hidden sm:table-cell">Cliente</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right hidden sm:table-cell">Hora</TableHead>
-                   <TableHead className="text-right sr-only">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingRecentOrders ? (
-                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
-                      <p className="mt-2 text-muted-foreground">Carregando últimos pedidos...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : recentOrders.length > 0 ? (
-                  recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{order.nomeCliente || 'N/A'}</TableCell>
-                      <TableCell>
-                         <Badge variant={"outline"} className={`whitespace-nowrap ${getStatusBadgeClass(order.status)}`}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">R$ {order.valorTotal?.toFixed(2).replace('.', ',') || '0,00'}</TableCell>
-                      <TableCell className="text-right hidden sm:table-cell">
-                        {order.dataCriacao ? new Date(order.dataCriacao.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit'}) : 'N/A'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/dashboard/pedidos/${order.id}`}>
-                            <ExternalLink className="h-4 w-4" />
-                             <span className="sr-only">Ver pedido</span>
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center">
-                      <Info className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-muted-foreground">Nenhum pedido recente encontrado.</p>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
